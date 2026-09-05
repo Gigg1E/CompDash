@@ -1,0 +1,1029 @@
+﻿<Window x:Class="CompDash.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="CompDash" Height="960" Width="1480" MinHeight="720" MinWidth="1180"
+        Background="{StaticResource Bg0}" WindowStartupLocation="CenterScreen"
+        AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Ideal">
+
+    <Grid Margin="14,12,14,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- top bar -->
+        <Grid Grid.Row="0" Margin="2,0,2,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="30" Height="30" CornerRadius="8" Background="{StaticResource Accent}"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="CD" FontSize="12.5" FontWeight="Bold" Foreground="#FF0B1020"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="CompDash" Style="{StaticResource H1}"/>
+                    <TextBlock Text="the C:\Tools scripts, with every knob exposed"
+                               Style="{StaticResource Caps}" Margin="0,1,0,0"/>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Border x:Name="FfBadge" CornerRadius="13" Background="{StaticResource Bg2}"
+                        BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="12,6">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="FfDot" Width="7" Height="7" Fill="{StaticResource Good}"
+                                 VerticalAlignment="Center"/>
+                        <TextBlock x:Name="FfText" Text="checking ffmpeg…" Margin="8,0,0,0"
+                                   FontSize="11.5" Foreground="{StaticResource Dim}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- tabs -->
+        <TabControl x:Name="Tabs" Grid.Row="1">
+            <TabControl.Template>
+                <ControlTemplate TargetType="TabControl">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TabPanel Grid.Row="0" IsItemsHost="True" Margin="0,0,0,10"/>
+                        <ContentPresenter Grid.Row="1" ContentSource="SelectedContent"/>
+                    </Grid>
+                </ControlTemplate>
+            </TabControl.Template>
+
+            <!-- STUDIO -->
+            <TabItem Header="Studio">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="286"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*" MinWidth="420"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="402"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- queue column -->
+                    <Border Grid.Row="0" Grid.Column="0" CornerRadius="10" Background="{StaticResource Bg1}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="FILES" Style="{StaticResource Caps}" Margin="2,0,0,8"/>
+
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                                <Button x:Name="BtnAdd" Content="Add files…" Style="{StaticResource Btn}"
+                                        Click="OnAddFiles"/>
+                                <Button x:Name="BtnClear" Content="Clear" Style="{StaticResource BtnGhost}"
+                                        Margin="6,0,0,0" Click="OnClearFiles"/>
+                            </StackPanel>
+
+                            <ListBox x:Name="FileList" Grid.Row="2" SelectionChanged="OnFileSelected">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Sub}" FontSize="11"
+                                                       Foreground="{StaticResource Dim}" Margin="0,2,0,0"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <TextBlock Grid.Row="3" Text="drop files anywhere on the window"
+                                       Style="{StaticResource Caps}" Margin="2,10,0,0"
+                                       HorizontalAlignment="Center" Opacity="0.6"/>
+
+                            <StackPanel Grid.Row="4" Margin="0,14,0,0">
+                                <TextBlock Text="PRESETS" Style="{StaticResource Caps}" Margin="2,0,0,7"/>
+                                <ComboBox x:Name="PresetCombo" SelectionChanged="OnPresetPreview"/>
+                                <TextBlock x:Name="PresetDetail" Margin="2,7,0,0" FontSize="11"
+                                           Foreground="{StaticResource Dim}" TextWrapping="Wrap" MinHeight="30"/>
+                                <Button x:Name="BtnApplyPreset" Content="Apply preset" Style="{StaticResource Btn}"
+                                        Margin="0,7,0,0" HorizontalAlignment="Stretch" Click="OnApplyPreset"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- settings column -->
+                    <Grid Grid.Row="0" Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- source card + output format -->
+                        <Border Grid.Row="0" CornerRadius="10" Background="{StaticResource Bg1}"
+                                BorderBrush="{StaticResource Line}" BorderThickness="1"
+                                Padding="14,12" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock x:Name="SrcName" Text="No file selected" FontSize="14.5"
+                                           FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="SrcMeta" Text="add a video, gif or image to begin"
+                                           FontSize="11.5" Foreground="{StaticResource Dim}" Margin="0,3,0,0"
+                                           TextTrimming="CharacterEllipsis"/>
+
+                                <Separator Margin="0,11,0,10" Background="{StaticResource Line}" Height="1"/>
+
+                                <TextBlock Text="CONVERT TO" Style="{StaticResource Caps}" Margin="0,0,0,8"/>
+                                <WrapPanel x:Name="FormatChips">
+                                    <ToggleButton x:Name="ChipMp4"  Content="MP4"  Style="{StaticResource Chip}" Tag="Mp4"  Click="OnFormatChip"/>
+                                    <ToggleButton x:Name="ChipMkv"  Content="MKV"  Style="{StaticResource Chip}" Tag="Mkv"  Click="OnFormatChip"/>
+                                    <ToggleButton x:Name="ChipWebm" Content="WEBM" Style="{StaticResource Chip}" Tag="WebM" Click="OnFormatChip"/>
+                                    <ToggleButton x:Name="ChipGif"  Content="GIF"  Style="{StaticResource Chip}" Tag="Gif"  Click="OnFormatChip"/>
+                                    <Border Width="1" Background="{StaticResource Line}" Margin="6,2,12,8"/>
+                                    <ToggleButton x:Name="ChipPng"  Content="PNG"  Style="{StaticResource Chip}" Tag="Png"  Click="OnFormatChip"/>
+                                    <ToggleButton x:Name="ChipJpg"  Content="JPEG" Style="{StaticResource Chip}" Tag="Jpg"  Click="OnFormatChip"/>
+                                    <ToggleButton x:Name="ChipWebp" Content="WEBP" Style="{StaticResource Chip}" Tag="WebP" Click="OnFormatChip"/>
+                                </WrapPanel>
+                                <TextBlock x:Name="NormalizeNote" Foreground="{StaticResource Warn}" FontSize="11"
+                                           TextWrapping="Wrap" Visibility="Collapsed" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- the sections -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+                            <StackPanel>
+
+                                <!-- 1 · trim -->
+                                <Expander x:Name="SecTrim" Style="{StaticResource Section}">
+                                    <Expander.Header>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="1 · Source &amp; trim" FontSize="13.5" FontWeight="SemiBold"/>
+                                                <TextBlock x:Name="TrimSub" Text="how much of the file you keep"
+                                                           Style="{StaticResource Caps}" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,4,0">
+                                                <TextBlock x:Name="EstTrim" Text="—" Style="{StaticResource Value}"
+                                                           FontSize="13" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel>
+                                        <Grid Margin="0,6,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="66"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="66"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Start" Style="{StaticResource Label}"/>
+                                            <Slider x:Name="TrimStartSlider" Grid.Column="1" Minimum="0" Maximum="1"
+                                                    ValueChanged="OnTrimChanged"/>
+                                            <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                       Text="{Binding ElementName=TrimStartSlider, Path=Value, StringFormat={}{0:0.00}s}"/>
+                                        </Grid>
+                                        <Grid Margin="0,6,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="66"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="66"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="End" Style="{StaticResource Label}"/>
+                                            <Slider x:Name="TrimEndSlider" Grid.Column="1" Minimum="0" Maximum="1"
+                                                    ValueChanged="OnTrimChanged"/>
+                                            <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                       Text="{Binding ElementName=TrimEndSlider, Path=Value, StringFormat={}{0:0.00}s}"/>
+                                        </Grid>
+                                        <StackPanel Orientation="Horizontal" Margin="66,10,0,0">
+                                            <Button Content="Whole file" Style="{StaticResource BtnGhost}" Click="OnResetTrim"/>
+                                            <TextBlock x:Name="TrimReadout" Margin="12,0,0,0" Style="{StaticResource Label}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Expander>
+
+                                <!-- 2 · frame size -->
+                                <Expander x:Name="SecScale" Style="{StaticResource Section}">
+                                    <Expander.Header>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="2 · Frame size" FontSize="13.5" FontWeight="SemiBold"/>
+                                                <TextBlock x:Name="ScaleSub" Text="pixel dimensions"
+                                                           Style="{StaticResource Caps}" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="EstScale" Grid.Column="1" Text="—" Margin="0,0,4,0"
+                                                       Style="{StaticResource Value}" FontSize="13" FontWeight="SemiBold"/>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,6,0,10">
+                                            <RadioButton x:Name="ScaleOriginal" Style="{StaticResource Radio}" Content="Original"
+                                                         GroupName="scale" IsChecked="True" Checked="OnScaleModeChanged"/>
+                                            <RadioButton x:Name="ScalePercent" Style="{StaticResource Radio}" Content="Percent"
+                                                         GroupName="scale" Checked="OnScaleModeChanged"/>
+                                            <RadioButton x:Name="ScaleWidth" Style="{StaticResource Radio}" Content="Fit width"
+                                                         GroupName="scale" Checked="OnScaleModeChanged"/>
+                                            <RadioButton x:Name="ScaleExact" Style="{StaticResource Radio}" Content="Exact"
+                                                         GroupName="scale" Checked="OnScaleModeChanged"/>
+                                        </StackPanel>
+
+                                        <Grid x:Name="PercentRow" Visibility="Collapsed" Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="66"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="66"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Scale" Style="{StaticResource Label}"/>
+                                            <Slider x:Name="PercentSlider" Grid.Column="1" Minimum="5" Maximum="200"
+                                                    Value="100" ValueChanged="OnSettingSlider"/>
+                                            <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                       Text="{Binding ElementName=PercentSlider, Path=Value, StringFormat={}{0:0}%}"/>
+                                        </Grid>
+
+                                        <StackPanel x:Name="WidthRow" Visibility="Collapsed" Margin="0,0,0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="66"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Width" Style="{StaticResource Label}"/>
+                                                <Slider x:Name="WidthSlider" Grid.Column="1" Minimum="64" Maximum="3840"
+                                                        Value="1280" ValueChanged="OnSettingSlider"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                           Text="{Binding ElementName=WidthSlider, Path=Value, StringFormat={}{0:0}px}"/>
+                                            </Grid>
+                                            <WrapPanel Margin="66,7,0,0">
+                                                <Button Content="1920" Style="{StaticResource BtnGhost}" Tag="1920" Click="OnQuickWidth"/>
+                                                <Button Content="1280" Style="{StaticResource BtnGhost}" Tag="1280" Click="OnQuickWidth"/>
+                                                <Button Content="854"  Style="{StaticResource BtnGhost}" Tag="854"  Click="OnQuickWidth"/>
+                                                <Button Content="640"  Style="{StaticResource BtnGhost}" Tag="640"  Click="OnQuickWidth"/>
+                                                <Button Content="480"  Style="{StaticResource BtnGhost}" Tag="480"  Click="OnQuickWidth"/>
+                                                <Button Content="320"  Style="{StaticResource BtnGhost}" Tag="320"  Click="OnQuickWidth"/>
+                                            </WrapPanel>
+                                        </StackPanel>
+
+                                        <StackPanel x:Name="ExactRow" Visibility="Collapsed" Orientation="Horizontal" Margin="66,0,0,8">
+                                            <TextBox x:Name="ExactW" Width="76" Text="1280" TextChanged="OnSettingText"/>
+                                            <TextBlock Text="×" Margin="8,0" Style="{StaticResource Label}"/>
+                                            <TextBox x:Name="ExactH" Width="76" Text="720" TextChanged="OnSettingText"/>
+                                        </StackPanel>
+
+                                        <Grid Margin="0,2,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="66"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Scaler" Style="{StaticResource Label}"/>
+                                            <ComboBox x:Name="ScalerCombo" Grid.Column="1" SelectionChanged="OnSettingCombo">
+                                                <ComboBoxItem Content="lanczos (sharp)" Tag="lanczos" IsSelected="True"/>
+                                                <ComboBoxItem Content="bicubic" Tag="bicubic"/>
+                                                <ComboBoxItem Content="bilinear (soft)" Tag="bilinear"/>
+                                                <ComboBoxItem Content="spline" Tag="spline"/>
+                                                <ComboBoxItem Content="neighbor (pixel art)" Tag="neighbor"/>
+                                            </ComboBox>
+                                            <TextBlock x:Name="OutDims" Grid.Column="2" Margin="12,0,0,0"
+                                                       Style="{StaticResource Label}" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Expander>
+
+                                <!-- 3 · frame rate -->
+                                <Expander x:Name="SecFps" Style="{StaticResource Section}">
+                                    <Expander.Header>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="3 · Frame rate" FontSize="13.5" FontWeight="SemiBold"/>
+                                                <TextBlock x:Name="FpsSub" Text="how many frames per second survive"
+                                                           Style="{StaticResource Caps}" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="EstFps" Grid.Column="1" Text="—" Margin="0,0,4,0"
+                                                       Style="{StaticResource Value}" FontSize="13" FontWeight="SemiBold"/>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel>
+                                        <CheckBox x:Name="ChangeFpsCheck" Content="Change frame rate"
+                                                  Margin="0,6,0,8" Click="OnSettingToggle"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="66"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="66"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Rate" Style="{StaticResource Label}"/>
+                                            <Slider x:Name="FpsSlider" Grid.Column="1" Minimum="1" Maximum="60" Value="30"
+                                                    IsSnapToTickEnabled="True" TickFrequency="1"
+                                                    ValueChanged="OnSettingSlider"/>
+                                            <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                       Text="{Binding ElementName=FpsSlider, Path=Value, StringFormat={}{0:0} fps}"/>
+                                        </Grid>
+                                        <WrapPanel Margin="66,7,0,0">
+                                            <Button Content="60" Style="{StaticResource BtnGhost}" Tag="60" Click="OnQuickFps"/>
+                                            <Button Content="30" Style="{StaticResource BtnGhost}" Tag="30" Click="OnQuickFps"/>
+                                            <Button Content="24" Style="{StaticResource BtnGhost}" Tag="24" Click="OnQuickFps"/>
+                                            <Button Content="15" Style="{StaticResource BtnGhost}" Tag="15" Click="OnQuickFps"/>
+                                            <Button Content="12" Style="{StaticResource BtnGhost}" Tag="12" Click="OnQuickFps"/>
+                                            <Button Content="10" Style="{StaticResource BtnGhost}" Tag="10" Click="OnQuickFps"/>
+                                            <Button Content="8"  Style="{StaticResource BtnGhost}" Tag="8"  Click="OnQuickFps"/>
+                                            <Button Content="5"  Style="{StaticResource BtnGhost}" Tag="5"  Click="OnQuickFps"/>
+                                        </WrapPanel>
+                                        <TextBlock x:Name="FpsReadout" Margin="66,9,0,0" Style="{StaticResource Label}"/>
+                                    </StackPanel>
+                                </Expander>
+
+                                <!-- 4 · colour -->
+                                <Expander x:Name="SecColor" Style="{StaticResource Section}">
+                                    <Expander.Header>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="4 · Colour &amp; palette" FontSize="13.5" FontWeight="SemiBold"/>
+                                                <TextBlock x:Name="ColorSub" Text="how many colours are kept, and how they are mixed"
+                                                           Style="{StaticResource Caps}" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="EstColor" Grid.Column="1" Text="—" Margin="0,0,4,0"
+                                                       Style="{StaticResource Value}" FontSize="13" FontWeight="SemiBold"/>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel>
+                                        <!-- palette block: gif always, png optional -->
+                                        <StackPanel x:Name="PaletteBlock" Margin="0,6,0,0">
+                                            <CheckBox x:Name="UsePaletteCheck" Content="Quantise to a colour palette"
+                                                      Margin="0,0,0,8" Click="OnSettingToggle" Visibility="Collapsed"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="66"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Colours" Style="{StaticResource Label}"/>
+                                                <Slider x:Name="ColorsSlider" Grid.Column="1" Minimum="2" Maximum="256"
+                                                        Value="128" IsSnapToTickEnabled="True" TickFrequency="1"
+                                                        ValueChanged="OnSettingSlider"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                           Text="{Binding ElementName=ColorsSlider, Path=Value, StringFormat={}{0:0}}"/>
+                                            </Grid>
+                                            <WrapPanel Margin="66,7,0,0">
+                                                <Button Content="256" Style="{StaticResource BtnGhost}" Tag="256" Click="OnQuickColors"/>
+                                                <Button Content="128" Style="{StaticResource BtnGhost}" Tag="128" Click="OnQuickColors"/>
+                                                <Button Content="64"  Style="{StaticResource BtnGhost}" Tag="64"  Click="OnQuickColors"/>
+                                                <Button Content="32"  Style="{StaticResource BtnGhost}" Tag="32"  Click="OnQuickColors"/>
+                                                <Button Content="16"  Style="{StaticResource BtnGhost}" Tag="16"  Click="OnQuickColors"/>
+                                                <Button Content="8"   Style="{StaticResource BtnGhost}" Tag="8"   Click="OnQuickColors"/>
+                                                <Button Content="4"   Style="{StaticResource BtnGhost}" Tag="4"   Click="OnQuickColors"/>
+                                            </WrapPanel>
+
+                                            <Grid Margin="0,10,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="10"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Dither" Style="{StaticResource Label}"/>
+                                                <ComboBox x:Name="DitherCombo" Grid.Column="1" SelectionChanged="OnSettingCombo">
+                                                    <ComboBoxItem Content="none (smallest, banded)" Tag="none"/>
+                                                    <ComboBoxItem Content="bayer (ordered)" Tag="bayer"/>
+                                                    <ComboBoxItem Content="sierra2" Tag="sierra2"/>
+                                                    <ComboBoxItem Content="sierra2_4a (default)" Tag="sierra2_4a" IsSelected="True"/>
+                                                    <ComboBoxItem Content="floyd_steinberg (best, biggest)" Tag="floyd_steinberg"/>
+                                                </ComboBox>
+                                                <ComboBox x:Name="StatsCombo" Grid.Column="3" SelectionChanged="OnSettingCombo">
+                                                    <ComboBoxItem Content="palette: per-change (diff)" Tag="diff" IsSelected="True"/>
+                                                    <ComboBoxItem Content="palette: whole clip (full)" Tag="full"/>
+                                                    <ComboBoxItem Content="palette: first frame" Tag="single"/>
+                                                </ComboBox>
+                                            </Grid>
+
+                                            <Grid x:Name="BayerRow" Margin="0,8,0,0" Visibility="Collapsed">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="66"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Bayer" Style="{StaticResource Label}"/>
+                                                <Slider x:Name="BayerSlider" Grid.Column="1" Minimum="0" Maximum="5" Value="3"
+                                                        IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="OnSettingSlider"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                           Text="{Binding ElementName=BayerSlider, Path=Value, StringFormat={}{0:0}}"/>
+                                            </Grid>
+
+                                            <Separator Margin="0,12,0,10" Background="{StaticResource Line}" Height="1"/>
+                                        </StackPanel>
+
+                                        <CheckBox x:Name="GrayCheck" Content="Greyscale" Margin="0,0,0,8" Click="OnSettingToggle"/>
+
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="66"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="66"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Saturation" Style="{StaticResource Label}"/>
+                                            <Slider x:Name="SatSlider" Grid.Column="1" Minimum="0" Maximum="2" Value="1"
+                                                    ValueChanged="OnSettingSlider"/>
+                                            <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                       Text="{Binding ElementName=SatSlider, Path=Value, StringFormat={}{0:0.00}}"/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="66"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="66"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Contrast" Style="{StaticResource Label}"/>
+                                            <Slider x:Name="ContrastSlider" Grid.Column="1" Minimum="0.4" Maximum="2" Value="1"
+                                                    ValueChanged="OnSettingSlider"/>
+                                            <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                       Text="{Binding ElementName=ContrastSlider, Path=Value, StringFormat={}{0:0.00}}"/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="66"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="66"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Brightness" Style="{StaticResource Label}"/>
+                                            <Slider x:Name="BrightSlider" Grid.Column="1" Minimum="-0.4" Maximum="0.4" Value="0"
+                                                    ValueChanged="OnSettingSlider"/>
+                                            <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                       Text="{Binding ElementName=BrightSlider, Path=Value, StringFormat={}{0:+0.00;-0.00;0.00}}"/>
+                                        </Grid>
+
+                                        <Grid x:Name="PixFmtRow" Margin="0,6,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="66"/>
+                                                <ColumnDefinition Width="220"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Pixels" Style="{StaticResource Label}"/>
+                                            <ComboBox x:Name="PixFmtCombo" Grid.Column="1" SelectionChanged="OnSettingCombo">
+                                                <ComboBoxItem Content="yuv420p — 8-bit, universal" Tag="yuv420p" IsSelected="True"/>
+                                                <ComboBoxItem Content="yuv420p10le — 10-bit" Tag="yuv420p10le"/>
+                                                <ComboBoxItem Content="yuv422p — more chroma" Tag="yuv422p"/>
+                                                <ComboBoxItem Content="yuv444p — full chroma" Tag="yuv444p"/>
+                                                <ComboBoxItem Content="gray — luma only" Tag="gray"/>
+                                            </ComboBox>
+                                        </Grid>
+                                    </StackPanel>
+                                </Expander>
+
+                                <!-- 5 · quality -->
+                                <Expander x:Name="SecQuality" Style="{StaticResource Section}">
+                                    <Expander.Header>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock x:Name="QualityTitle" Text="5 · Compression &amp; codec"
+                                                           FontSize="13.5" FontWeight="SemiBold"/>
+                                                <TextBlock x:Name="QualitySub" Text="how hard the pixels get squeezed"
+                                                           Style="{StaticResource Caps}" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="EstQuality" Grid.Column="1" Text="—" Margin="0,0,4,0"
+                                                       Style="{StaticResource Value}" FontSize="13" FontWeight="SemiBold"/>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel>
+                                        <!-- video -->
+                                        <StackPanel x:Name="VideoQualityBlock">
+                                            <Grid Margin="0,6,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="200"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Codec" Style="{StaticResource Label}"/>
+                                                <ComboBox x:Name="CodecCombo" Grid.Column="1" SelectionChanged="OnSettingCombo">
+                                                    <ComboBoxItem Content="H.264 (libx264)" Tag="H264" IsSelected="True"/>
+                                                    <ComboBoxItem Content="H.265 (libx265)" Tag="H265"/>
+                                                    <ComboBoxItem Content="VP9 (libvpx-vp9)" Tag="VP9"/>
+                                                    <ComboBoxItem Content="AV1 (SVT-AV1)" Tag="AV1"/>
+                                                </ComboBox>
+                                            </Grid>
+
+                                            <StackPanel Orientation="Horizontal" Margin="66,0,0,10">
+                                                <RadioButton x:Name="RateQuality" Style="{StaticResource Radio}" GroupName="rate"
+                                                             Content="Constant quality" IsChecked="True" Checked="OnRateModeChanged"/>
+                                                <RadioButton x:Name="RateBitrate" Style="{StaticResource Radio}" GroupName="rate"
+                                                             Content="Bitrate" Checked="OnRateModeChanged"/>
+                                                <RadioButton x:Name="RateTarget" Style="{StaticResource Radio}" GroupName="rate"
+                                                             Content="Target file size" Checked="OnRateModeChanged"/>
+                                            </StackPanel>
+
+                                            <Grid x:Name="CrfRow">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="66"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="CRF" Style="{StaticResource Label}"/>
+                                                <Slider x:Name="CrfSlider" Grid.Column="1" Minimum="0" Maximum="51" Value="26"
+                                                        IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="OnSettingSlider"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                           Text="{Binding ElementName=CrfSlider, Path=Value, StringFormat={}{0:0}}"/>
+                                            </Grid>
+                                            <TextBlock x:Name="CrfHint" Margin="66,4,0,0" Style="{StaticResource Caps}"/>
+
+                                            <Grid x:Name="BitrateRow" Visibility="Collapsed" Margin="0,8,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="78"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Bitrate" Style="{StaticResource Label}"/>
+                                                <Slider x:Name="BitrateSlider" Grid.Column="1" Minimum="50" Maximum="20000"
+                                                        Value="2000" ValueChanged="OnSettingSlider"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                           Text="{Binding ElementName=BitrateSlider, Path=Value, StringFormat={}{0:0}k}"/>
+                                            </Grid>
+
+                                            <Grid x:Name="TargetRow" Visibility="Collapsed" Margin="0,8,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="110"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Target" Style="{StaticResource Label}"/>
+                                                <TextBox x:Name="TargetMbBox" Grid.Column="1" Text="8" TextChanged="OnSettingText"/>
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
+                                                    <TextBlock Text="MB" Style="{StaticResource Label}" Margin="0,0,10,0"/>
+                                                    <Button Content="500 KB" Style="{StaticResource BtnGhost}" Tag="0.4883" Click="OnQuickTarget"/>
+                                                    <Button Content="8 MB" Style="{StaticResource BtnGhost}" Tag="8" Click="OnQuickTarget"/>
+                                                    <Button Content="10 MB" Style="{StaticResource BtnGhost}" Tag="10" Click="OnQuickTarget"/>
+                                                    <Button Content="25 MB" Style="{StaticResource BtnGhost}" Tag="25" Click="OnQuickTarget"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <Grid Margin="0,10,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="200"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Effort" Style="{StaticResource Label}"/>
+                                                <ComboBox x:Name="PresetCodecCombo" Grid.Column="1" SelectionChanged="OnSettingCombo">
+                                                    <ComboBoxItem Content="ultrafast" Tag="ultrafast"/>
+                                                    <ComboBoxItem Content="veryfast" Tag="veryfast"/>
+                                                    <ComboBoxItem Content="faster" Tag="faster"/>
+                                                    <ComboBoxItem Content="fast" Tag="fast"/>
+                                                    <ComboBoxItem Content="medium" Tag="medium" IsSelected="True"/>
+                                                    <ComboBoxItem Content="slow" Tag="slow"/>
+                                                    <ComboBoxItem Content="slower" Tag="slower"/>
+                                                    <ComboBoxItem Content="veryslow" Tag="veryslow"/>
+                                                </ComboBox>
+                                                <CheckBox x:Name="TwoPassCheck" Grid.Column="2" Content="Two-pass"
+                                                          Margin="12,0,0,0" IsChecked="True" Click="OnSettingToggle"/>
+                                            </Grid>
+
+                                            <Grid x:Name="SvtRow" Margin="0,8,0,0" Visibility="Collapsed">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="66"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="AV1 speed" Style="{StaticResource Label}"/>
+                                                <Slider x:Name="SvtSlider" Grid.Column="1" Minimum="0" Maximum="12" Value="6"
+                                                        IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="OnSettingSlider"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                           Text="{Binding ElementName=SvtSlider, Path=Value, StringFormat={}{0:0}}"/>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <!-- image -->
+                                        <StackPanel x:Name="ImageQualityBlock" Visibility="Collapsed">
+                                            <Grid x:Name="JpegRow" Margin="0,6,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="66"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Quality" Style="{StaticResource Label}"/>
+                                                <Slider x:Name="JpegSlider" Grid.Column="1" Minimum="1" Maximum="100" Value="85"
+                                                        IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="OnSettingSlider"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                           Text="{Binding ElementName=JpegSlider, Path=Value, StringFormat={}{0:0}}"/>
+                                            </Grid>
+                                            <Grid x:Name="WebpRow" Margin="0,6,0,0" Visibility="Collapsed">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="66"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Quality" Style="{StaticResource Label}"/>
+                                                <Slider x:Name="WebpSlider" Grid.Column="1" Minimum="1" Maximum="100" Value="80"
+                                                        IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="OnSettingSlider"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                           Text="{Binding ElementName=WebpSlider, Path=Value, StringFormat={}{0:0}}"/>
+                                            </Grid>
+                                            <CheckBox x:Name="WebpLosslessCheck" Content="Lossless WebP" Margin="66,8,0,0"
+                                                      Visibility="Collapsed" Click="OnSettingToggle"/>
+                                            <Grid x:Name="PngRow" Margin="0,6,0,0" Visibility="Collapsed">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="66"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Deflate" Style="{StaticResource Label}"/>
+                                                <Slider x:Name="PngSlider" Grid.Column="1" Minimum="0" Maximum="9" Value="9"
+                                                        IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="OnSettingSlider"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                           Text="{Binding ElementName=PngSlider, Path=Value, StringFormat={}{0:0}}"/>
+                                            </Grid>
+                                            <Grid x:Name="FrameTimeRow" Margin="0,10,0,0" Visibility="Collapsed">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="66"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Frame at" Style="{StaticResource Label}"/>
+                                                <Slider x:Name="FrameTimeSlider" Grid.Column="1" Minimum="0" Maximum="1"
+                                                        ValueChanged="OnSettingSlider"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                           Text="{Binding ElementName=FrameTimeSlider, Path=Value, StringFormat={}{0:0.00}s}"/>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <TextBlock x:Name="GifQualityNote" Visibility="Collapsed" Margin="0,6,0,0"
+                                                   TextWrapping="Wrap" FontSize="11.5" Foreground="{StaticResource Dim}"
+                                                   Text="GIF has no bitrate. Its size is set entirely by frame size, frame rate and palette — sections 2, 3 and 4."/>
+                                    </StackPanel>
+                                </Expander>
+
+                                <!-- 6 · audio -->
+                                <Expander x:Name="SecAudio" Style="{StaticResource Section}">
+                                    <Expander.Header>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="6 · Audio" FontSize="13.5" FontWeight="SemiBold"/>
+                                                <TextBlock x:Name="AudioSub" Text="the soundtrack"
+                                                           Style="{StaticResource Caps}" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="EstAudio" Grid.Column="1" Text="—" Margin="0,0,4,0"
+                                                       Style="{StaticResource Value}" FontSize="13" FontWeight="SemiBold"/>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,6,0,10">
+                                            <RadioButton x:Name="AudioReencode" Style="{StaticResource Radio}" GroupName="audio"
+                                                         Content="Re-encode" IsChecked="True" Checked="OnAudioModeChanged"/>
+                                            <RadioButton x:Name="AudioCopy" Style="{StaticResource Radio}" GroupName="audio"
+                                                         Content="Copy as-is" Checked="OnAudioModeChanged"/>
+                                            <RadioButton x:Name="AudioRemove" Style="{StaticResource Radio}" GroupName="audio"
+                                                         Content="Remove" Checked="OnAudioModeChanged"/>
+                                        </StackPanel>
+                                        <Grid x:Name="AudioOpts">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid Grid.Row="0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="78"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Bitrate" Style="{StaticResource Label}"/>
+                                                <Slider x:Name="AudioKbpsSlider" Grid.Column="1" Minimum="16" Maximum="320"
+                                                        Value="128" IsSnapToTickEnabled="True" TickFrequency="8"
+                                                        ValueChanged="OnSettingSlider"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                           Text="{Binding ElementName=AudioKbpsSlider, Path=Value, StringFormat={}{0:0}k}"/>
+                                            </Grid>
+                                            <Grid Grid.Row="1" Margin="0,10,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="66"/>
+                                                    <ColumnDefinition Width="170"/>
+                                                    <ColumnDefinition Width="10"/>
+                                                    <ColumnDefinition Width="160"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="Codec" Style="{StaticResource Label}"/>
+                                                <ComboBox x:Name="ACodecCombo" Grid.Column="1" SelectionChanged="OnSettingCombo">
+                                                    <ComboBoxItem Content="AAC" Tag="Aac" IsSelected="True"/>
+                                                    <ComboBoxItem Content="Opus" Tag="Opus"/>
+                                                    <ComboBoxItem Content="MP3" Tag="Mp3"/>
+                                                </ComboBox>
+                                                <ComboBox x:Name="AChannelsCombo" Grid.Column="3" SelectionChanged="OnSettingCombo">
+                                                    <ComboBoxItem Content="keep channels" Tag="0" IsSelected="True"/>
+                                                    <ComboBoxItem Content="stereo" Tag="2"/>
+                                                    <ComboBoxItem Content="mono" Tag="1"/>
+                                                </ComboBox>
+                                            </Grid>
+                                        </Grid>
+                                    </StackPanel>
+                                </Expander>
+
+                                <!-- 7 · output -->
+                                <Expander x:Name="SecOutput" Style="{StaticResource Section}" IsExpanded="False">
+                                    <Expander.Header>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="7 · Output &amp; command" FontSize="13.5" FontWeight="SemiBold"/>
+                                                <TextBlock Text="where it lands, and the exact ffmpeg line"
+                                                           Style="{StaticResource Caps}" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel>
+                                        <Grid Margin="0,6,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="66"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Folder" Style="{StaticResource Label}"/>
+                                            <TextBox x:Name="OutDirBox" Grid.Column="1" Text="" TextChanged="OnSettingText"/>
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="6,0,0,0">
+                                                <Button Content="Browse…" Style="{StaticResource BtnGhost}" Click="OnBrowseOutDir"/>
+                                                <Button Content="Same as source" Style="{StaticResource BtnGhost}" Click="OnSameAsSource"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="66"/>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Suffix" Style="{StaticResource Label}"/>
+                                            <TextBox x:Name="SuffixBox" Grid.Column="1" Text="_cd" TextChanged="OnSettingText"/>
+                                            <TextBlock x:Name="OutPathPreview" Grid.Column="2" Margin="10,0,0,0"
+                                                       Style="{StaticResource Label}" TextTrimming="CharacterEllipsis"/>
+                                        </Grid>
+                                        <WrapPanel Margin="66,0,0,8">
+                                            <CheckBox x:Name="StripMetaCheck" Content="Strip metadata" IsChecked="True"
+                                                      Margin="0,0,16,0" Click="OnSettingToggle"/>
+                                            <CheckBox x:Name="FastStartCheck" Content="MP4 faststart" IsChecked="True"
+                                                      Margin="0,0,16,0" Click="OnSettingToggle"/>
+                                            <CheckBox x:Name="GifLoopCheck" Content="Loop GIF forever" IsChecked="True"
+                                                      Click="OnSettingToggle"/>
+                                        </WrapPanel>
+                                        <TextBlock Text="ffmpeg command" Style="{StaticResource Caps}" Margin="0,6,0,5"/>
+                                        <TextBox x:Name="CmdPreview" IsReadOnly="True" TextWrapping="Wrap"
+                                                 FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                                 Foreground="{StaticResource Dim}" MinHeight="60" MaxHeight="150"
+                                                 VerticalScrollBarVisibility="Auto"/>
+                                        <Button Content="Copy command" Style="{StaticResource BtnGhost}"
+                                                HorizontalAlignment="Left" Margin="0,6,0,0" Click="OnCopyCommand"/>
+                                    </StackPanel>
+                                </Expander>
+
+                                <Border Height="8" Background="Transparent"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <!-- preview / estimate column -->
+                    <Grid Grid.Row="0" Grid.Column="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- preview -->
+                        <Border Grid.Row="0" CornerRadius="10" Background="{StaticResource Bg1}"
+                                BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="12"
+                                Margin="0,0,0,10">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <TextBlock Text="PREVIEW" Style="{StaticResource Caps}"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <CheckBox x:Name="AutoPreviewCheck" Content="auto" IsChecked="True"
+                                                  FontSize="11" Margin="0,0,8,0"/>
+                                        <Button Content="Refresh" Style="{StaticResource BtnGhost}" Click="OnRefreshPreview"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <Border Height="132" CornerRadius="6" Background="{StaticResource Bg0}"
+                                                BorderBrush="{StaticResource Line}" BorderThickness="1">
+                                            <Image x:Name="PrevSource" Stretch="Uniform" Margin="3"/>
+                                        </Border>
+                                        <TextBlock Text="source" Style="{StaticResource Caps}" Margin="0,5,0,0"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <Border Height="132" CornerRadius="6" Background="{StaticResource Bg0}"
+                                                BorderBrush="{StaticResource Accent}" BorderThickness="1">
+                                            <Image x:Name="PrevResult" Stretch="Uniform" Margin="3"/>
+                                        </Border>
+                                        <TextBlock x:Name="PrevResultLabel" Text="result" Style="{StaticResource Caps}"
+                                                   Margin="0,5,0,0" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="46"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="At" Style="{StaticResource Label}"/>
+                                    <Slider x:Name="PreviewTime" Grid.Column="1" Minimum="0" Maximum="1"
+                                            ValueChanged="OnPreviewTimeChanged"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- estimate -->
+                        <Border Grid.Row="1" CornerRadius="10" Background="{StaticResource Bg1}"
+                                BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14"
+                                Margin="0,0,0,10">
+                            <StackPanel>
+                                <Grid>
+                                    <TextBlock Text="ESTIMATED OUTPUT" Style="{StaticResource Caps}"/>
+                                    <TextBlock x:Name="EstSpinner" Text="working…" Style="{StaticResource Caps}"
+                                               HorizontalAlignment="Right" Foreground="{StaticResource Accent}"
+                                               Visibility="Collapsed"/>
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" Margin="0,7,0,0">
+                                    <TextBlock x:Name="EstBig" Text="—" FontSize="34" FontWeight="Bold"/>
+                                    <StackPanel VerticalAlignment="Bottom" Margin="12,0,0,6">
+                                        <TextBlock x:Name="EstDelta" Text="" FontSize="15" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource Good}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock x:Name="EstFrom" Text="" Style="{StaticResource Label}" Margin="0,2,0,0"/>
+                                <TextBlock x:Name="EstNote" Text="" Style="{StaticResource Caps}" Margin="0,6,0,0"
+                                           TextWrapping="Wrap"/>
+                                <Button x:Name="BtnRefine" Content="Re-measure" Style="{StaticResource BtnGhost}"
+                                        HorizontalAlignment="Left" Margin="0,8,0,0" Click="OnRefine"/>
+
+                                <Separator Margin="0,12,0,12" Background="{StaticResource Line}" Height="1"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="BtnConvert" Grid.Column="0" Content="Convert"
+                                            Style="{StaticResource BtnPrimary}" Click="OnConvert"/>
+                                    <Button x:Name="BtnConvertAll" Grid.Column="2" Content="All files"
+                                            Style="{StaticResource Btn}" Padding="14,9" Click="OnConvertAll"/>
+                                </Grid>
+                                <Button x:Name="BtnCancel" Content="Cancel" Style="{StaticResource BtnGhost}"
+                                        HorizontalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed"
+                                        Click="OnCancel"/>
+                                <ProgressBar x:Name="Prog" Margin="0,10,0,0" Minimum="0" Maximum="1" Value="0"/>
+                                <TextBlock x:Name="ProgText" Text="idle" Style="{StaticResource Caps}" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- log -->
+                        <Border Grid.Row="2" CornerRadius="10" Background="{StaticResource Bg1}"
+                                BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="12">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <TextBlock Text="LOG" Style="{StaticResource Caps}"/>
+                                    <Button Content="Clear" Style="{StaticResource BtnGhost}"
+                                            HorizontalAlignment="Right" Click="OnClearLog"/>
+                                </Grid>
+                                <TextBox x:Name="LogBox" Grid.Row="1" IsReadOnly="True" TextWrapping="NoWrap"
+                                         Background="{StaticResource Bg0}" BorderThickness="1"
+                                         FontFamily="{StaticResource MonoFont}" FontSize="10.5"
+                                         Foreground="{StaticResource Dim}"
+                                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- TOOLBOX -->
+            <TabItem Header="Toolbox">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="440"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" CornerRadius="10" Background="{StaticResource Bg1}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="18">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock Text="The rest of C:\Tools" Style="{StaticResource H1}"/>
+                                <TextBlock Text="scripts that are not media conversion, launched from here"
+                                           Style="{StaticResource Caps}" Margin="0,3,0,16"/>
+
+                                <Border CornerRadius="9" Background="{StaticResource Bg2}"
+                                        BorderBrush="{StaticResource Line}" BorderThickness="1"
+                                        Padding="15" Margin="0,0,0,10">
+                                    <StackPanel>
+                                        <TextBlock Text="Disk Analyzer" FontSize="14" FontWeight="SemiBold"/>
+                                        <TextBlock TextWrapping="Wrap" Margin="0,4,0,10" FontSize="12"
+                                                   Foreground="{StaticResource Dim}"
+                                                   Text="Walks a folder tree and writes an interactive treemap HTML report of what is using the space. disk-analyzer.ps1"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="DiskPath" Grid.Column="0" Text="C:\"/>
+                                            <TextBlock Grid.Column="1" Text="depth" Style="{StaticResource Label}" Margin="10,0,6,0"/>
+                                            <TextBox x:Name="DiskDepth" Grid.Column="2" Text="3" Width="46"/>
+                                            <Button Grid.Column="3" Content="Run" Style="{StaticResource Btn}"
+                                                    Margin="8,0,0,0" Click="OnRunDiskAnalyzer"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border CornerRadius="9" Background="{StaticResource Bg2}"
+                                        BorderBrush="{StaticResource Line}" BorderThickness="1"
+                                        Padding="15" Margin="0,0,0,10">
+                                    <StackPanel>
+                                        <TextBlock Text="TREAI" FontSize="14" FontWeight="SemiBold"/>
+                                        <TextBlock TextWrapping="Wrap" Margin="0,4,0,10" FontSize="12"
+                                                   Foreground="{StaticResource Dim}"
+                                                   Text="Samples a source tree and asks a local Ollama model to summarise the project into an HTML report. Needs Ollama running on localhost:11434. TREAI.ps1"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="TreaiPath" Grid.Column="0" Text=""/>
+                                            <Button Grid.Column="1" Content="Browse…" Style="{StaticResource BtnGhost}"
+                                                    Margin="8,0,0,0" Click="OnBrowseTreai"/>
+                                            <Button Grid.Column="2" Content="Run" Style="{StaticResource Btn}"
+                                                    Margin="8,0,0,0" Click="OnRunTreai"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border CornerRadius="9" Background="{StaticResource Bg2}"
+                                        BorderBrush="{StaticResource Line}" BorderThickness="1"
+                                        Padding="15" Margin="0,0,0,10">
+                                    <StackPanel>
+                                        <TextBlock Text="Explorer right-click menu" FontSize="14" FontWeight="SemiBold"/>
+                                        <TextBlock TextWrapping="Wrap" Margin="0,4,0,10" FontSize="12"
+                                                   Foreground="{StaticResource Dim}"
+                                                   Text="Adds or removes the Convert / Compress / Squeeze entries on .mp4, .mkv and .gif files. Writing to the registry will prompt for elevation."/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="Install" Style="{StaticResource Btn}" Click="OnInstallReg"/>
+                                            <Button Content="Remove" Style="{StaticResource Btn}" Margin="8,0,0,0" Click="OnUninstallReg"/>
+                                            <Button Content="Open C:\Tools" Style="{StaticResource BtnGhost}" Margin="8,0,0,0" Click="OnOpenTools"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <Border Grid.Column="2" CornerRadius="10" Background="{StaticResource Bg1}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="18">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock Text="What replaced what" Style="{StaticResource H1}"/>
+                                <TextBlock Text="every fixed setting in the old scripts is now a control in Studio"
+                                           Style="{StaticResource Caps}" Margin="0,3,0,14" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="MappingText" TextWrapping="Wrap" FontSize="12"
+                                           Foreground="{StaticResource Dim}" LineHeight="20"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
