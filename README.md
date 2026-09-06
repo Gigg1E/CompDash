@@ -4,10 +4,19 @@ A WPF dashboard over the media tools in `C:\Tools`. Same ffmpeg underneath, but 
 setting the old scripts hard-coded is a control you can move, and each section shows what
 the output would weigh with the settings up to that point applied.
 
+Three tabs: **Studio** converts and compresses one file at a time, **PDF** merges a pile of
+mixed files into a single document in an order you choose, and **Toolbox** launches the
+remaining `C:\Tools` scripts.
+
 ## Requirements
 
 - .NET 10 SDK (built and tested against 10.0.400)
 - ffmpeg and ffprobe on `PATH` — `winget install Gyan.FFmpeg` if you need them
+
+Optional, only for the PDF tab:
+
+- Microsoft Edge, for HTML and SVG (ships with Windows)
+- LibreOffice, for Word / Excel / PowerPoint — `winget install TheDocumentFoundation.LibreOffice`
 
 The badge top-right turns red if it cannot find ffmpeg; hover it for the path it did find.
 As well as `PATH`, it looks in the winget links folder, `C:\ffmpeg\bin`,
@@ -80,6 +89,53 @@ CRF blockiness and palette banding actually show up instead of being invisible u
 commit. The **At** slider moves both. Untick **auto** if the constant re-encoding gets in
 the way on a big file.
 
+## PDF tab
+
+Merge a pile of mixed files into one PDF, in an order you control.
+
+Add files or a whole folder, or drop them on the window while this tab is open. They arrive
+in **natural** name order, so `page2` lands before `page10` instead of after it.
+
+Four ways to set the order, and they all agree with each other:
+
+- **Type a number** into the box on the left of a row and press Enter — the row jumps to that
+  position and everything renumbers.
+- **Drag a row** up or down.
+- **▲ ▼** on the row, or the Move up / Move down buttons.
+- **Sort A→Z**, **Sort by date**, **Reverse**.
+
+Untick a row to leave it out without removing it. For a PDF source, the small box on the
+right takes a page range — `1-3,7` or `8-` or even `5-2` to reverse those pages. Blank means
+all of them.
+
+### What it can take in
+
+| | |
+|---|---|
+| Images | PNG, JPEG, BMP, GIF, TIFF, WebP — one page each |
+| PDF | merged as-is, with an optional page range |
+| Text and code | TXT, MD, CSV, JSON, XML, LOG, PS1, CS, PY… paginated in monospace with the filename as a header |
+| HTML, SVG | rendered by headless Edge |
+| Word, Excel, PowerPoint, OpenDocument | needs LibreOffice — `winget install TheDocumentFoundation.LibreOffice` |
+
+The **Converters found** panel on the right tells you which of these are live on this
+machine, and any row it cannot handle says so in its status instead of failing at build
+time. If a file turns out to be broken mid-build it is skipped and named in the log; the
+rest of the document still gets written.
+
+### Page setup
+
+Paper (A4 through Tabloid, or **Match each image** to make every page exactly the size of
+its picture), rotation, scaling (fit inside / fill and crop / actual size) and margin. With
+rotation on **Auto**, a wide image gets a landscape page and a tall one gets portrait.
+
+**Bookmark each source file** adds a PDF outline entry per input, which makes a 200-page
+merge navigable. **Number the pages** stamps a footer across the whole document, including
+the pages that came from imported PDFs.
+
+The footer under the list keeps a running "N files · about M pages" so you know what you are
+about to get. Page counts are exact for PDFs and calculated from the real layout for text.
+
 ## Toolbox tab
 
 `disk-analyzer.ps1` and `TREAI.ps1` with their arguments as fields, plus install/remove for
@@ -106,11 +162,20 @@ dist\CompDash.exe --selftest "C:\some\clip.mp4"
 
 Drives every output format through the real UI code and writes
 `%TEMP%\CompDash\selftest.txt`. Should say `SELFTEST OK` and then list the ffmpeg command
-it built for each format.
+it built for each format. Pass mergeable files too and it also exercises the PDF tab —
+adding, renumbering, sorting and a real build:
+
+```
+dist\CompDash.exe --selftest clip.mp4 a.png b.png notes.txt report.pdf
+```
 
 ## Known limits
 
-- One settings set for the whole queue; there is no per-file override.
+- One settings set for the whole Studio queue; there is no per-file override.
+- The PDF tab applies one page setup to the whole document; you cannot mix A4 and Letter in
+  a single merge.
+- Merging is done in memory, so a merge of several hundred megabytes of source PDFs will
+  use a matching amount of RAM.
 - GIF has no target-size mode — its size comes from frame size, frame rate and palette, so
   those are the knobs.
 - Long-clip estimates assume the three sampled slices are representative. A clip that is

@@ -927,6 +927,279 @@
                 </Grid>
             </TabItem>
 
+            <!-- PDF -->
+            <TabItem Header="PDF">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MinWidth="460"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="396"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- ordered file list -->
+                    <Border Grid.Column="0" CornerRadius="10" Background="{StaticResource Bg1}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="Merge into one PDF" Style="{StaticResource H1}"/>
+                                    <TextBlock Text="images, PDFs, text and web pages — in the order you number them"
+                                               Style="{StaticResource Caps}" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <WrapPanel Grid.Row="1" Margin="0,0,0,10">
+                                <Button Content="Add files…" Style="{StaticResource Btn}" Margin="0,0,6,6"
+                                        Click="OnPdfAddFiles"/>
+                                <Button Content="Add folder…" Style="{StaticResource Btn}" Margin="0,0,6,6"
+                                        Click="OnPdfAddFolder"/>
+                                <Button Content="Clear" Style="{StaticResource BtnGhost}" Margin="0,0,14,6"
+                                        Click="OnPdfClear"/>
+                                <Button Content="Sort A→Z" Style="{StaticResource BtnGhost}" Margin="0,0,6,6"
+                                        Click="OnPdfSortName"
+                                        ToolTip="Natural order, so page2 comes before page10"/>
+                                <Button Content="Sort by date" Style="{StaticResource BtnGhost}" Margin="0,0,6,6"
+                                        Click="OnPdfSortDate"/>
+                                <Button Content="Reverse" Style="{StaticResource BtnGhost}" Margin="0,0,14,6"
+                                        Click="OnPdfReverse"/>
+                                <Button Content="Move up" Style="{StaticResource BtnGhost}" Margin="0,0,6,6"
+                                        Click="OnPdfMoveUp"/>
+                                <Button Content="Move down" Style="{StaticResource BtnGhost}" Margin="0,0,6,6"
+                                        Click="OnPdfMoveDown"/>
+                                <Button Content="Remove" Style="{StaticResource BtnGhost}" Margin="0,0,0,6"
+                                        Click="OnPdfRemove"/>
+                            </WrapPanel>
+
+                            <ListBox x:Name="DocList" Grid.Row="2"
+                                     ItemContainerStyle="{StaticResource PlainRow}"
+                                     AllowDrop="True"
+                                     PreviewMouseLeftButtonDown="OnDocPreviewDown"
+                                     PreviewMouseMove="OnDocPreviewMove"
+                                     Drop="OnDocDrop" DragOver="OnDocDragOver">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="44"/>
+                                                <ColumnDefinition Width="26"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBox Grid.Column="0" Width="34" HorizontalAlignment="Left"
+                                                     Padding="4,3" FontFamily="{StaticResource MonoFont}"
+                                                     TextAlignment="Center"
+                                                     Text="{Binding Order, Mode=TwoWay, UpdateSourceTrigger=Explicit}"
+                                                     LostFocus="OnOrderCommit" KeyDown="OnOrderKey"
+                                                     ToolTip="Type a position and press Enter"/>
+
+                                            <CheckBox Grid.Column="1" IsChecked="{Binding Include, Mode=TwoWay}"
+                                                      VerticalAlignment="Center"
+                                                      ToolTip="Include this file in the merge"/>
+
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="4,0,8,0">
+                                                <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Sub}" FontSize="10.5"
+                                                           Foreground="{StaticResource Dim}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+
+                                            <TextBox Grid.Column="3" Width="86" VerticalAlignment="Center"
+                                                     Margin="0,0,8,0" Padding="6,3" FontSize="11"
+                                                     Visibility="{Binding IsPdf, Converter={StaticResource B2V}}"
+                                                     Text="{Binding Range, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                                     LostFocus="OnRangeCommit"
+                                                     ToolTip="Pages to take, e.g. 1-3,7 or 8- . Blank means all."/>
+
+                                            <TextBlock x:Name="StatusText" Grid.Column="4" VerticalAlignment="Center"
+                                                       Margin="0,0,8,0" FontSize="11"
+                                                       Foreground="{StaticResource Dim}"
+                                                       Text="{Binding Status}"/>
+
+                                            <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Content="▲" Style="{StaticResource TinyBtn}" Click="OnRowUp"/>
+                                                <Button Content="▼" Style="{StaticResource TinyBtn}" Click="OnRowDown"/>
+                                                <Button Content="✕" Style="{StaticResource TinyBtn}" Click="OnRowRemove"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding HasProblem}" Value="True">
+                                                <Setter TargetName="StatusText" Property="Foreground"
+                                                        Value="{StaticResource Warn}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Include}" Value="False">
+                                                <Setter TargetName="StatusText" Property="Opacity" Value="0.5"/>
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <Grid Grid.Row="3" Margin="0,10,0,0">
+                                <TextBlock x:Name="DocSummary" Style="{StaticResource Label}"
+                                           Text="drop files anywhere on the window"/>
+                                <TextBlock Text="drag a row to reorder, or type its number"
+                                           Style="{StaticResource Caps}" HorizontalAlignment="Right" Opacity="0.6"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- options -->
+                    <Border Grid.Column="2" CornerRadius="10" Background="{StaticResource Bg1}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
+                                <StackPanel>
+                                    <TextBlock Text="SAVE AS" Style="{StaticResource Caps}" Margin="0,0,0,7"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="PdfOutBox" Grid.Column="0"/>
+                                        <Button Grid.Column="1" Content="…" Style="{StaticResource BtnGhost}"
+                                                Margin="6,0,0,0" Click="OnPdfBrowseOut"/>
+                                    </Grid>
+
+                                    <Separator Margin="0,14,0,12" Background="{StaticResource Line}" Height="1"/>
+
+                                    <TextBlock Text="PAGE SETUP" Style="{StaticResource Caps}" Margin="0,0,0,8"/>
+
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="72"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Paper" Style="{StaticResource Label}"/>
+                                        <ComboBox x:Name="PaperCombo" Grid.Column="1" SelectionChanged="OnPdfOption">
+                                            <ComboBoxItem Content="A4" Tag="A4" IsSelected="True"/>
+                                            <ComboBoxItem Content="Letter" Tag="Letter"/>
+                                            <ComboBoxItem Content="Legal" Tag="Legal"/>
+                                            <ComboBoxItem Content="A3" Tag="A3"/>
+                                            <ComboBoxItem Content="A5" Tag="A5"/>
+                                            <ComboBoxItem Content="Tabloid" Tag="Tabloid"/>
+                                            <ComboBoxItem Content="Match each image" Tag="Auto"/>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="72"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Rotation" Style="{StaticResource Label}"/>
+                                        <ComboBox x:Name="OrientCombo" Grid.Column="1" SelectionChanged="OnPdfOption">
+                                            <ComboBoxItem Content="Auto — follow each image" Tag="Auto" IsSelected="True"/>
+                                            <ComboBoxItem Content="Portrait" Tag="Portrait"/>
+                                            <ComboBoxItem Content="Landscape" Tag="Landscape"/>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="72"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Scaling" Style="{StaticResource Label}"/>
+                                        <ComboBox x:Name="FitCombo" Grid.Column="1" SelectionChanged="OnPdfOption">
+                                            <ComboBoxItem Content="Fit inside the page" Tag="Fit" IsSelected="True"/>
+                                            <ComboBoxItem Content="Fill the page (crops)" Tag="Fill"/>
+                                            <ComboBoxItem Content="Actual size" Tag="Actual"/>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <Grid Margin="0,2,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="72"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="60"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Margin" Style="{StaticResource Label}"/>
+                                        <Slider x:Name="MarginSlider" Grid.Column="1" Minimum="0" Maximum="40"
+                                                Value="10" IsSnapToTickEnabled="True" TickFrequency="1"
+                                                ValueChanged="OnPdfOptionSlider"/>
+                                        <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                   Text="{Binding ElementName=MarginSlider, Path=Value, StringFormat={}{0:0} mm}"/>
+                                    </Grid>
+
+                                    <Separator Margin="0,14,0,12" Background="{StaticResource Line}" Height="1"/>
+
+                                    <TextBlock Text="EXTRAS" Style="{StaticResource Caps}" Margin="0,0,0,8"/>
+                                    <CheckBox x:Name="BookmarkCheck" Content="Bookmark each source file"
+                                              IsChecked="True" Margin="0,0,0,8" Click="OnPdfOptionToggle"/>
+                                    <CheckBox x:Name="PageNumCheck" Content="Number the pages"
+                                              Margin="0,0,0,10" Click="OnPdfOptionToggle"/>
+
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="72"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="60"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Text size" Style="{StaticResource Label}"
+                                                   ToolTip="Only affects .txt, .md, .csv and code files"/>
+                                        <Slider x:Name="TextSizeSlider" Grid.Column="1" Minimum="5" Maximum="16"
+                                                Value="9" IsSnapToTickEnabled="True" TickFrequency="1"
+                                                ValueChanged="OnPdfOptionSlider"/>
+                                        <TextBlock Grid.Column="2" Style="{StaticResource Value}"
+                                                   Text="{Binding ElementName=TextSizeSlider, Path=Value, StringFormat={}{0:0} pt}"/>
+                                    </Grid>
+
+                                    <Separator Margin="0,10,0,12" Background="{StaticResource Line}" Height="1"/>
+
+                                    <TextBlock Text="DOCUMENT INFO" Style="{StaticResource Caps}" Margin="0,0,0,8"/>
+                                    <TextBox x:Name="PdfTitleBox" Margin="0,0,0,6"
+                                             ToolTip="PDF title. Blank uses the file name."/>
+                                    <TextBox x:Name="PdfAuthorBox" ToolTip="PDF author. Optional."/>
+
+                                    <Separator Margin="0,14,0,12" Background="{StaticResource Line}" Height="1"/>
+
+                                    <TextBlock Text="CONVERTERS FOUND" Style="{StaticResource Caps}" Margin="0,0,0,7"/>
+                                    <TextBlock x:Name="PdfSupportText" TextWrapping="Wrap" FontSize="11"
+                                               Foreground="{StaticResource Dim}" LineHeight="17"/>
+
+                                    <TextBlock Text="LOG" Style="{StaticResource Caps}" Margin="0,16,0,6"/>
+                                    <TextBox x:Name="PdfLog" IsReadOnly="True" TextWrapping="NoWrap"
+                                             Background="{StaticResource Bg0}"
+                                             FontFamily="{StaticResource MonoFont}" FontSize="10.5"
+                                             Foreground="{StaticResource Dim}" MinHeight="90" MaxHeight="200"
+                                             VerticalScrollBarVisibility="Auto"
+                                             HorizontalScrollBarVisibility="Auto"/>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <StackPanel Grid.Row="1" Margin="0,12,0,0">
+                                <CheckBox x:Name="OpenWhenDoneCheck" Content="Open it when finished"
+                                          IsChecked="True" Margin="0,0,0,10"/>
+                                <Button x:Name="BtnBuildPdf" Content="Build PDF" Style="{StaticResource BtnPrimary}"
+                                        HorizontalAlignment="Stretch" Click="OnBuildPdf"/>
+                                <Button x:Name="BtnCancelPdf" Content="Cancel" Style="{StaticResource BtnGhost}"
+                                        HorizontalAlignment="Center" Margin="0,8,0,0"
+                                        Visibility="Collapsed" Click="OnCancelPdf"/>
+                                <ProgressBar x:Name="PdfProg" Margin="0,10,0,0" Minimum="0" Maximum="1" Value="0"/>
+                                <TextBlock x:Name="PdfProgText" Text="idle" Style="{StaticResource Caps}"
+                                           Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
             <!-- TOOLBOX -->
             <TabItem Header="Toolbox">
                 <Grid>

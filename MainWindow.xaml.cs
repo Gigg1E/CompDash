@@ -88,6 +88,8 @@ namespace CompDash
             _suppress = false;
             Refresh();
 
+            InitPdfTab();
+
             if (App.StartupFiles.Length > 0) AddFiles(App.StartupFiles);
             if (App.SelfTest) RunSelfTest();
         }
@@ -122,6 +124,9 @@ namespace CompDash
                 }
                 catch (Exception ex) { problems.Add(k + ": " + ex.GetType().Name + " " + ex.Message); }
             }
+
+            report.Add("");
+            await SelfTestPdfTab(problems, report);
 
             var path = Path.Combine(Ff.TempDir, "selftest.txt");
             File.WriteAllLines(path, new[] { problems.Count == 0 ? "SELFTEST OK" : "SELFTEST FAILURES:" }
@@ -162,7 +167,11 @@ namespace CompDash
         void OnDrop(object sender, DragEventArgs e)
         {
             if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
-            AddFiles((string[])e.Data.GetData(DataFormats.FileDrop));
+            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+            // Drops land in whichever tab is open, so the same gesture means the obvious thing.
+            if (Tabs != null && Tabs.SelectedIndex == 1) AddDocs(files, sortNew: true);
+            else AddFiles(files);
         }
 
         void OnAddFiles(object sender, RoutedEventArgs e)
