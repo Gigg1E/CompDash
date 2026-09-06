@@ -8,6 +8,9 @@ namespace CompDash.Core
 {
     public enum DocKind { Image, Pdf, Text, Html, Office, Unsupported }
 
+    /// <summary>What the ordered list of files is being merged into.</summary>
+    public enum MergeTarget { Pdf, Docx }
+
     public enum PaperSize { Auto, A4, Letter, Legal, A3, A5, Tabloid }
     public enum Orient { Auto, Portrait, Landscape }
     public enum FitMode { Fit, Fill, Actual }
@@ -112,17 +115,40 @@ namespace CompDash.Core
             }
         }
 
-        /// <summary>Explains, in the row, whether this file can actually be converted right now.</summary>
-        public static string Availability(DocKind k)
+        public static bool IsDocx(string path) =>
+            path != null && path.EndsWith(".docx", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Explains, in the row, whether this file can actually be converted right now.
+        /// What is possible depends on the target: Edge makes PDFs but not Word documents,
+        /// and reflowing a PDF back into Word is a different problem entirely.
+        /// </summary>
+        public static string Availability(DocKind k, MergeTarget target, string path = null)
         {
+            if (k == DocKind.Unsupported) return "unsupported file type";
+
+            if (target == MergeTarget.Docx)
+            {
+                switch (k)
+                {
+                    case DocKind.Pdf:
+                        return "PDF cannot become Word";
+                    case DocKind.Office:
+                        if (IsDocx(path)) return "";                       // read directly
+                        return DocConvert.LibreOfficePath != null ? "" : "needs LibreOffice";
+                    case DocKind.Html:
+                        return DocConvert.LibreOfficePath != null ? "" : "needs LibreOffice";
+                    default:
+                        return "";
+                }
+            }
+
             switch (k)
             {
                 case DocKind.Html:
                     return DocConvert.EdgePath != null ? "" : "needs Microsoft Edge";
                 case DocKind.Office:
                     return DocConvert.LibreOfficePath != null ? "" : "needs LibreOffice";
-                case DocKind.Unsupported:
-                    return "unsupported file type";
                 default:
                     return "";
             }

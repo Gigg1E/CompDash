@@ -20,6 +20,8 @@ namespace CompDash
     {
         readonly ObservableCollection<DocItem> _docs = new ObservableCollection<DocItem>();
         readonly PdfOptions _pdf = new PdfOptions();
+        readonly DocxOptions _docxOpt = new DocxOptions();
+        MergeTarget _target = MergeTarget.Pdf;
         CancellationTokenSource _pdfCts;
         bool _pdfBusy;
 
@@ -41,20 +43,128 @@ namespace CompDash
             PdfOutBox.Text = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "merged.pdf");
 
-            var lines = new List<string>
+            CollectPdf();
+            CollectDocx();
+            ApplyTarget();          // fills in the converter list for whichever target is current
+            UpdateDocSummary();
+        }
+
+        // ==================================================================
+        //  PDF or Word
+        // ==================================================================
+        void OnTargetChip(object s, RoutedEventArgs e)
+        {
+            if (!_pdfReady) return;
+            var chip = (System.Windows.Controls.Primitives.ToggleButton)s;
+            _target = (MergeTarget)Enum.Parse(typeof(MergeTarget), (string)chip.Tag);
+            ApplyTarget();
+        }
+
+        void ApplyTarget()
+        {
+            bool word = _target == MergeTarget.Docx;
+
+            ChipToPdf.IsChecked = !word;
+            ChipToDocx.IsChecked = word;
+            PdfOnlyPanel.Visibility = word ? Visibility.Collapsed : Visibility.Visible;
+            DocxOnlyPanel.Visibility = word ? Visibility.Visible : Visibility.Collapsed;
+
+            DocHeading.Text = word ? "Convert into one Word document" : "Merge into one PDF";
+            DocSubHeading.Text = word
+                ? "text, Markdown, images and Word files — in the order you number them"
+                : "images, PDFs, text and web pages — in the order you number them";
+            BtnBuildPdf.Content = word ? "Build Word document" : "Build PDF";
+
+            // Keep the extension honest when the target changes.
+            var path = PdfOutBox.Text.Trim();
+            if (path.Length > 0)
             {
-                "images, PDF, text and code — built in",
-                DocConvert.EdgePath != null
+                var want = word ? ".docx" : ".pdf";
+                var have = Path.GetExtension(path);
+                if (!string.Equals(have, want, StringComparison.OrdinalIgnoreCase))
+                {
+                    var dir = Path.GetDirectoryName(path);
+                    var stem = Path.GetFileNameWithoutExtension(path);
+                    PdfOutBox.Text = string.IsNullOrEmpty(dir) ? stem + want : Path.Combine(dir, stem + want);
+                }
+            }
+
+            var lines = new List<string>();
+            if (word)
+            {
+                lines.Add("text, Markdown and images — built in");
+                lines.Add(".docx — read directly");
+                lines.Add(DocConvert.LibreOfficePath != null
+                    ? ".doc, .odt, .rtf, HTML — LibreOffice"
+                    : ".doc, .odt, .rtf, HTML — need LibreOffice:\n     winget install TheDocumentFoundation.LibreOffice");
+                lines.Add("PDF cannot become Word — that needs layout reconstruction.");
+                lines.Add("Google Docs: use File → Download → Microsoft Word instead of exporting text.");
+            }
+            else
+            {
+                lines.Add("images, PDF, text and code — built in");
+                lines.Add(DocConvert.EdgePath != null
                     ? "HTML and SVG — Microsoft Edge"
-                    : "HTML and SVG — needs Microsoft Edge (not found)",
-                DocConvert.LibreOfficePath != null
+                    : "HTML and SVG — needs Microsoft Edge (not found)");
+                lines.Add(DocConvert.LibreOfficePath != null
                     ? "Word, Excel, PowerPoint — LibreOffice"
-                    : "Word, Excel, PowerPoint — needs LibreOffice:\n     winget install TheDocumentFoundation.LibreOffice"
-            };
+                    : "Word, Excel, PowerPoint — need LibreOffice:\n     winget install TheDocumentFoundation.LibreOffice");
+            }
             PdfSupportText.Text = string.Join("\n", lines);
 
-            CollectPdf();
+            // What a row can do depends on where it is going, so re-check every one.
+            foreach (var it in _docs)
+            {
+                var why = Docs.Availability(it.Kind, _target, it.Path);
+                it.HasProblem = why.Length > 0;
+                it.Status = it.HasProblem ? why : PageLabel(it);
+            }
+
             UpdateDocSummary();
+        }
+
+        void OnDocxOption(object s, SelectionChangedEventArgs e)
+        {
+            if (!_pdfReady) return;
+            CollectDocx();
+        }
+
+        void OnDocxOptionToggle(object s, RoutedEventArgs e)
+        {
+            if (!_pdfReady) return;
+            CollectDocx();
+        }
+
+        void CollectDocx()
+        {
+            if (!_pdfReady) return;
+
+            _docxOpt.Style = ParseTag(StyleCombo, AcademicStyle.MLA);
+            _docxOpt.FontName = TagText(DocxFontCombo, "Times New Roman");
+            _docxOpt.FontSize = ParseNum(DocxSizeCombo, 12);
+            _docxOpt.LineSpacing = ParseNum(DocxSpacingCombo, 2);
+            _docxOpt.Paper = ParseTag(DocxPaperCombo, PaperSize.Letter);
+            _docxOpt.MarginIn = ParseNum(DocxMarginCombo, 1);
+            _docxOpt.FirstLineIndent = IndentCheck.IsChecked == true;
+            _docxOpt.PageNumbers = DocxPageNumCheck.IsChecked == true;
+            _docxOpt.PageBreakBetweenFiles = PageBreakCheck.IsChecked == true;
+            _docxOpt.TreatTxtAsMarkdown = TxtMarkdownCheck.IsChecked == true;
+            _docxOpt.StudentName = NameBox.Text;
+            _docxOpt.Instructor = InstructorBox.Text;
+            _docxOpt.Course = CourseBox.Text;
+            _docxOpt.DateLine = DateBox.Text;
+            _docxOpt.TitleText = EssayTitleBox.Text;
+            _docxOpt.OutPath = PdfOutBox.Text.Trim();
+            _docxOpt.OpenWhenDone = OpenWhenDoneCheck.IsChecked == true;
+        }
+
+        static string TagText(ComboBox c, string dflt) =>
+            (c?.SelectedItem as ComboBoxItem)?.Tag as string ?? dflt;
+
+        static double ParseNum(ComboBox c, double dflt)
+        {
+            var t = (c?.SelectedItem as ComboBoxItem)?.Tag as string;
+            return double.TryParse(t, NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : dflt;
         }
 
         // ==================================================================
@@ -136,7 +246,7 @@ namespace CompDash
                 it.Pages = PdfBuild.EstimatePages(it, _pdf);
             }
 
-            var why = Docs.Availability(it.Kind);
+            var why = Docs.Availability(it.Kind, _target, it.Path);
             if (why.Length > 0) { it.Status = why; it.HasProblem = true; }
             else it.Status = PageLabel(it);
 
@@ -446,26 +556,49 @@ namespace CompDash
                                string.Join(", ", _docs.Select(d => d.Order + ":" + d.Name)));
                 }
 
-                var outPath = Path.Combine(Ff.TempDir, "selftest_merge.pdf");
-                try { if (File.Exists(outPath)) File.Delete(outPath); } catch { }
-
-                PdfOutBox.Text = outPath;
                 OpenWhenDoneCheck.IsChecked = false;
                 PageNumCheck.IsChecked = true;
+
+                // ---- PDF target ----
+                var pdfOut = Path.Combine(Ff.TempDir, "selftest_merge.pdf");
+                try { if (File.Exists(pdfOut)) File.Delete(pdfOut); } catch { }
+                PdfOutBox.Text = pdfOut;
 
                 OnBuildPdf(null, null);
                 for (int i = 0; i < 600 && _pdfBusy; i++) await Task.Delay(100);
 
-                if (_pdfBusy) problems.Add("PDF tab: build did not finish in 60s");
-                else if (!File.Exists(outPath)) problems.Add("PDF tab: build produced no file");
+                if (_pdfBusy) problems.Add("Documents tab: PDF build did not finish in 60s");
+                else if (!File.Exists(pdfOut)) problems.Add("Documents tab: PDF build produced no file");
                 else
                 {
-                    var n = PdfBuild.PageCountOf(outPath);
-                    if (n <= 0) problems.Add("PDF tab: output will not re-open");
-                    report.Add($"PDF tab: built {n} pages, {Fmt.Size(new FileInfo(outPath).Length)}  {outPath}");
+                    var n = PdfBuild.PageCountOf(pdfOut);
+                    if (n <= 0) problems.Add("Documents tab: PDF will not re-open");
+                    report.Add($"Documents tab: PDF {n} pages, {Fmt.Size(new FileInfo(pdfOut).Length)}");
                 }
 
-                report.Add("PDF tab: summary reads \"" + DocSummary.Text + "\"");
+                // ---- Word target ----
+                ChipToDocx.IsChecked = true;
+                OnTargetChip(ChipToDocx, null);
+                report.Add("Documents tab: switched to Word, statuses -> " +
+                           string.Join(", ", _docs.Select(d => d.Name + "=" + d.Status)));
+
+                NameBox.Text = "Test Student";
+                CourseBox.Text = "ENG 101";
+                EssayTitleBox.Text = "Self Test";
+                CollectDocx();
+
+                var docxOut = Path.Combine(Ff.TempDir, "selftest_merge.docx");
+                try { if (File.Exists(docxOut)) File.Delete(docxOut); } catch { }
+                PdfOutBox.Text = docxOut;
+
+                OnBuildPdf(null, null);
+                for (int i = 0; i < 600 && _pdfBusy; i++) await Task.Delay(100);
+
+                if (_pdfBusy) problems.Add("Documents tab: Word build did not finish in 60s");
+                else if (!File.Exists(docxOut)) problems.Add("Documents tab: Word build produced no file");
+                else report.Add($"Documents tab: Word {Fmt.Size(new FileInfo(docxOut).Length)}  {docxOut}");
+
+                report.Add("Documents tab: summary reads \"" + DocSummary.Text + "\"");
             }
             catch (Exception ex)
             {
@@ -488,6 +621,8 @@ namespace CompDash
         {
             if (_pdfBusy) return;
             CollectPdf();
+            CollectDocx();
+            bool word = _target == MergeTarget.Docx;
 
             var usable = _docs.Where(x => x.Include && !x.HasProblem).ToList();
             if (usable.Count == 0)
@@ -500,11 +635,13 @@ namespace CompDash
                 PdfLogLine("pick where to save it first");
                 return;
             }
-            if (!_pdf.OutPath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            var wantExt = word ? ".docx" : ".pdf";
+            if (!_pdf.OutPath.EndsWith(wantExt, StringComparison.OrdinalIgnoreCase))
             {
-                _pdf.OutPath += ".pdf";
+                _pdf.OutPath += wantExt;
                 PdfOutBox.Text = _pdf.OutPath;
             }
+            _docxOpt.OutPath = _pdf.OutPath;
 
             // Never quietly clobber something that is already there.
             if (File.Exists(_pdf.OutPath))
@@ -528,14 +665,25 @@ namespace CompDash
             try
             {
                 var snapshot = usable.Select(x => x).ToList();
-                var opt = _pdf;
-                rep = await Task.Run(() => PdfBuild.BuildAsync(snapshot, opt,
-                        (p, what) => Dispatcher.BeginInvoke(new Action(() =>
-                        {
-                            PdfProg.Value = p;
-                            PdfProgText.Text = what;
-                        })),
-                        _pdfCts.Token), _pdfCts.Token);
+                Action<double, string> onProgress = (p, what) =>
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        PdfProg.Value = p;
+                        PdfProgText.Text = what;
+                    }));
+
+                if (word)
+                {
+                    var opt = _docxOpt;
+                    rep = await Task.Run(() => DocxBuild.BuildAsync(snapshot, opt, onProgress, _pdfCts.Token),
+                                         _pdfCts.Token);
+                }
+                else
+                {
+                    var opt = _pdf;
+                    rep = await Task.Run(() => PdfBuild.BuildAsync(snapshot, opt, onProgress, _pdfCts.Token),
+                                         _pdfCts.Token);
+                }
             }
             catch (OperationCanceledException) { PdfLogLine("cancelled"); }
             catch (Exception ex) { PdfLogLine("FAILED: " + ex.Message); }
@@ -558,9 +706,10 @@ namespace CompDash
 
             if (rep.Ok)
             {
-                PdfLogLine($"  {rep.Pages} pages · {Fmt.Size(rep.Bytes)} · {sw.Elapsed.TotalSeconds:0.#}s");
+                var unit = word ? "paragraphs" : "pages";
+                PdfLogLine($"  {rep.Pages} {unit} · {Fmt.Size(rep.Bytes)} · {sw.Elapsed.TotalSeconds:0.#}s");
                 PdfLogLine("  " + rep.OutPath);
-                PdfProgText.Text = $"{rep.Pages} pages · {Fmt.Size(rep.Bytes)}";
+                PdfProgText.Text = $"{rep.Pages} {unit} · {Fmt.Size(rep.Bytes)}";
 
                 if (rep.Failures.Count > 0)
                     PdfLogLine("  " + rep.Failures.Count + " file(s) were skipped — see above");

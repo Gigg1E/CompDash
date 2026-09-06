@@ -4,19 +4,23 @@ A WPF dashboard over the media tools in `C:\Tools`. Same ffmpeg underneath, but 
 setting the old scripts hard-coded is a control you can move, and each section shows what
 the output would weigh with the settings up to that point applied.
 
-Three tabs: **Studio** converts and compresses one file at a time, **PDF** merges a pile of
-mixed files into a single document in an order you choose, and **Toolbox** launches the
-remaining `C:\Tools` scripts.
+Three tabs: **Studio** converts and compresses one media file at a time, **Documents**
+turns a pile of mixed files into a single PDF or Word document in an order you choose, and
+**Toolbox** launches the remaining `C:\Tools` scripts.
 
 ## Requirements
 
 - .NET 10 SDK (built and tested against 10.0.400)
 - ffmpeg and ffprobe on `PATH` — `winget install Gyan.FFmpeg` if you need them
 
-Optional, only for the PDF tab:
+Optional, only for the Documents tab:
 
-- Microsoft Edge, for HTML and SVG (ships with Windows)
-- LibreOffice, for Word / Excel / PowerPoint — `winget install TheDocumentFoundation.LibreOffice`
+- Microsoft Edge, to put HTML and SVG into a PDF (ships with Windows)
+- LibreOffice, for `.doc`, `.odt`, `.rtf`, Excel and PowerPoint —
+  `winget install TheDocumentFoundation.LibreOffice`
+
+Writing PDF and Word files themselves needs nothing installed. Microsoft Word is **not**
+required to produce `.docx`.
 
 The badge top-right turns red if it cannot find ffmpeg; hover it for the path it did find.
 As well as `PATH`, it looks in the winget links folder, `C:\ffmpeg\bin`,
@@ -89,9 +93,11 @@ CRF blockiness and palette banding actually show up instead of being invisible u
 commit. The **At** slider moves both. Untick **auto** if the constant re-encoding gets in
 the way on a big file.
 
-## PDF tab
+## Documents tab
 
-Merge a pile of mixed files into one PDF, in an order you control.
+Take a pile of mixed files, put them in an order you control, and turn them into one
+**PDF** or one **Word document**. The list and the ordering are the same either way; the
+**Merge into** switch changes the target and the options below it.
 
 Add files or a whole folder, or drop them on the window while this tab is open. They arrive
 in **natural** name order, so `page2` lands before `page10` instead of after it.
@@ -136,6 +142,40 @@ the pages that came from imported PDFs.
 The footer under the list keeps a running "N files · about M pages" so you know what you are
 about to get. Page counts are exact for PDFs and calculated from the real layout for text.
 
+### Word output
+
+Switch **Merge into** to **Word .docx** and the same ordered list becomes a Word document.
+`.docx` is an open format — ECMA-376, a zip of XML — so this is written directly with
+Microsoft's MIT-licensed Open XML SDK. **Word does not need to be installed**, on your
+machine or anyone else's.
+
+What goes in:
+
+| | |
+|---|---|
+| `.txt` | Paragraphs split on blank lines, soft-wrapped lines rejoined. Nothing is interpreted, so a file full of asterisks stays literal — unless you tick **Read .txt as Markdown**. |
+| `.md` | Headings, **bold**, *italic*, `code`, bullet and numbered lists, block quotes, fenced code, horizontal rules and links, all mapped to real Word styles. |
+| Images | Embedded and scaled to the text width. WebP and HEIC get re-wrapped as PNG first, since Word cannot embed them. |
+| `.docx` | Read directly and appended, images and all. |
+| `.doc`, `.odt`, `.rtf`, HTML | Through LibreOffice, when it is installed. |
+| PDF | **Not supported.** Reflowing a PDF back into editable Word needs layout reconstruction, which is a different problem; the row says so rather than producing something unusable. |
+
+**Google Docs**: don't route it through here. Use File → Download → Microsoft Word (.docx)
+in Google Docs itself — it is a first-class export and anything else is a downgrade. Bring
+the `.docx` here only if you want to merge it with something else.
+
+### Turning it in
+
+The **MLA** and **APA** presets set what those styles actually ask for: Times New Roman 12,
+double spacing, 1-inch margins, a first-line indent, and the page number top right — with
+your surname beside it for MLA. Fill in the title block (name, instructor, course, date,
+title) and it goes on the first page in the right shape for the preset; leave the fields
+blank and no title block is written at all. **Plain** turns all of that off and just gives
+you a clean document.
+
+Everything is still adjustable underneath — font, size, spacing, paper, margins — so a
+class with its own quirks is a couple of clicks, not a fight.
+
 ## Toolbox tab
 
 `disk-analyzer.ps1` and `TREAI.ps1` with their arguments as fields, plus install/remove for
@@ -166,14 +206,22 @@ it built for each format. Pass mergeable files too and it also exercises the PDF
 adding, renumbering, sorting and a real build:
 
 ```
-dist\CompDash.exe --selftest clip.mp4 a.png b.png notes.txt report.pdf
+dist\CompDash.exe --selftest clip.mp4 a.png notes.md report.pdf
 ```
+
+That exercises both targets: it builds a PDF, switches to Word, re-checks every row against
+the new target, and builds a `.docx`.
 
 ## Known limits
 
 - One settings set for the whole Studio queue; there is no per-file override.
-- The PDF tab applies one page setup to the whole document; you cannot mix A4 and Letter in
-  a single merge.
+- The Documents tab applies one page setup to the whole document; you cannot mix A4 and
+  Letter in a single merge.
+- Importing an existing `.docx` copies its content and images, but the target document's
+  styles win. A source that leaned on its own custom styles or list numbering may come
+  through looking plainer than it started.
+- The Markdown reader covers headings, emphasis, code, lists, quotes, rules and links.
+  Tables, footnotes and images-by-reference are not handled.
 - Merging is done in memory, so a merge of several hundred megabytes of source PDFs will
   use a matching amount of RAM.
 - GIF has no target-size mode — its size comes from frame size, frame rate and palette, so

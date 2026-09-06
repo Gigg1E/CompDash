@@ -113,7 +113,17 @@ namespace CompDash.Core
         }
 
         /// <summary>Word / Excel / PowerPoint / OpenDocument to PDF via LibreOffice.</summary>
-        public static async Task<string> OfficeToPdfAsync(string src, CancellationToken ct)
+        public static Task<string> OfficeToPdfAsync(string src, CancellationToken ct) =>
+            ConvertViaLibreOfficeAsync(src, "pdf", ct);
+
+        /// <summary>
+        /// Anything LibreOffice can read into .docx — used for .odt, .rtf, .doc and HTML,
+        /// so they can join a Word document rather than only a PDF.
+        /// </summary>
+        public static Task<string> OfficeToDocxAsync(string src, CancellationToken ct) =>
+            ConvertViaLibreOfficeAsync(src, "docx", ct);
+
+        static async Task<string> ConvertViaLibreOfficeAsync(string src, string target, CancellationToken ct)
         {
             if (LibreOfficePath == null)
                 throw new InvalidOperationException(
@@ -130,20 +140,20 @@ namespace CompDash.Core
             {
                 "-env:UserInstallation=" + profile,
                 "--headless", "--norestore", "--invisible", "--nolockcheck",
-                "--convert-to", "pdf",
+                "--convert-to", target,
                 "--outdir", outDir,
                 Path.GetFullPath(src)
             };
 
             await RunAsync(LibreOfficePath, args, 180000, ct).ConfigureAwait(false);
 
-            var produced = Path.Combine(outDir, Path.GetFileNameWithoutExtension(src) + ".pdf");
+            var produced = Path.Combine(outDir, Path.GetFileNameWithoutExtension(src) + "." + target);
             if (File.Exists(produced)) return produced;
 
-            foreach (var f in Directory.GetFiles(outDir, "*.pdf")) return f;
+            foreach (var f in Directory.GetFiles(outDir, "*." + target)) return f;
 
             throw new InvalidOperationException(
-                "LibreOffice did not produce a PDF for " + Path.GetFileName(src));
+                "LibreOffice did not produce a ." + target + " for " + Path.GetFileName(src));
         }
 
         public static void CleanWorkDir()

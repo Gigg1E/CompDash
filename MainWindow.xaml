@@ -927,8 +927,8 @@
                 </Grid>
             </TabItem>
 
-            <!-- PDF -->
-            <TabItem Header="PDF">
+            <!-- DOCUMENTS -->
+            <TabItem Header="Documents">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" MinWidth="460"/>
@@ -949,8 +949,9 @@
 
                             <Grid Grid.Row="0" Margin="0,0,0,10">
                                 <StackPanel>
-                                    <TextBlock Text="Merge into one PDF" Style="{StaticResource H1}"/>
-                                    <TextBlock Text="images, PDFs, text and web pages — in the order you number them"
+                                    <TextBlock x:Name="DocHeading" Text="Merge into one PDF" Style="{StaticResource H1}"/>
+                                    <TextBlock x:Name="DocSubHeading"
+                                               Text="images, PDFs, text and web pages — in the order you number them"
                                                Style="{StaticResource Caps}" Margin="0,3,0,0"/>
                                 </StackPanel>
                             </Grid>
@@ -1078,6 +1079,18 @@
 
                                     <Separator Margin="0,14,0,12" Background="{StaticResource Line}" Height="1"/>
 
+                                    <TextBlock Text="MERGE INTO" Style="{StaticResource Caps}" Margin="0,0,0,8"/>
+                                    <WrapPanel Margin="0,0,0,4">
+                                        <ToggleButton x:Name="ChipToPdf" Content="PDF" Style="{StaticResource Chip}"
+                                                      Tag="Pdf" IsChecked="True" Click="OnTargetChip"/>
+                                        <ToggleButton x:Name="ChipToDocx" Content="Word .docx" Style="{StaticResource Chip}"
+                                                      Tag="Docx" Click="OnTargetChip"/>
+                                    </WrapPanel>
+
+                                    <!-- PDF page setup -->
+                                    <StackPanel x:Name="PdfOnlyPanel">
+                                    <Separator Margin="0,10,0,12" Background="{StaticResource Line}" Height="1"/>
+
                                     <TextBlock Text="PAGE SETUP" Style="{StaticResource Caps}" Margin="0,0,0,8"/>
 
                                     <Grid Margin="0,0,0,8">
@@ -1166,6 +1179,105 @@
                                     <TextBox x:Name="PdfTitleBox" Margin="0,0,0,6"
                                              ToolTip="PDF title. Blank uses the file name."/>
                                     <TextBox x:Name="PdfAuthorBox" ToolTip="PDF author. Optional."/>
+                                    </StackPanel>
+
+                                    <!-- Word setup -->
+                                    <StackPanel x:Name="DocxOnlyPanel" Visibility="Collapsed">
+                                        <Separator Margin="0,10,0,12" Background="{StaticResource Line}" Height="1"/>
+
+                                        <TextBlock Text="FORMATTING" Style="{StaticResource Caps}" Margin="0,0,0,8"/>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="72"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Preset" Style="{StaticResource Label}"/>
+                                            <ComboBox x:Name="StyleCombo" Grid.Column="1" SelectionChanged="OnDocxOption">
+                                                <ComboBoxItem Content="MLA" Tag="MLA" IsSelected="True"/>
+                                                <ComboBoxItem Content="APA" Tag="APA"/>
+                                                <ComboBoxItem Content="Plain — no title block" Tag="Plain"/>
+                                            </ComboBox>
+                                        </Grid>
+
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="72"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Font" Style="{StaticResource Label}"/>
+                                            <ComboBox x:Name="DocxFontCombo" Grid.Column="1" SelectionChanged="OnDocxOption">
+                                                <ComboBoxItem Content="Times New Roman" Tag="Times New Roman" IsSelected="True"/>
+                                                <ComboBoxItem Content="Calibri" Tag="Calibri"/>
+                                                <ComboBoxItem Content="Arial" Tag="Arial"/>
+                                                <ComboBoxItem Content="Cambria" Tag="Cambria"/>
+                                                <ComboBoxItem Content="Georgia" Tag="Georgia"/>
+                                            </ComboBox>
+                                        </Grid>
+
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="72"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="10"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Size" Style="{StaticResource Label}"/>
+                                            <ComboBox x:Name="DocxSizeCombo" Grid.Column="1" SelectionChanged="OnDocxOption">
+                                                <ComboBoxItem Content="11 pt" Tag="11"/>
+                                                <ComboBoxItem Content="12 pt" Tag="12" IsSelected="True"/>
+                                                <ComboBoxItem Content="14 pt" Tag="14"/>
+                                            </ComboBox>
+                                            <ComboBox x:Name="DocxSpacingCombo" Grid.Column="3" SelectionChanged="OnDocxOption">
+                                                <ComboBoxItem Content="single" Tag="1"/>
+                                                <ComboBoxItem Content="1.5 lines" Tag="1.5"/>
+                                                <ComboBoxItem Content="double" Tag="2" IsSelected="True"/>
+                                            </ComboBox>
+                                        </Grid>
+
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="72"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="10"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Paper" Style="{StaticResource Label}"/>
+                                            <ComboBox x:Name="DocxPaperCombo" Grid.Column="1" SelectionChanged="OnDocxOption">
+                                                <ComboBoxItem Content="Letter" Tag="Letter" IsSelected="True"/>
+                                                <ComboBoxItem Content="A4" Tag="A4"/>
+                                                <ComboBoxItem Content="Legal" Tag="Legal"/>
+                                            </ComboBox>
+                                            <ComboBox x:Name="DocxMarginCombo" Grid.Column="3" SelectionChanged="OnDocxOption">
+                                                <ComboBoxItem Content="1&quot; margins" Tag="1" IsSelected="True"/>
+                                                <ComboBoxItem Content="1.25&quot;" Tag="1.25"/>
+                                                <ComboBoxItem Content="0.75&quot;" Tag="0.75"/>
+                                            </ComboBox>
+                                        </Grid>
+
+                                        <WrapPanel Margin="0,4,0,0">
+                                            <CheckBox x:Name="IndentCheck" Content="Indent first line"
+                                                      IsChecked="True" Margin="0,0,14,8" Click="OnDocxOptionToggle"/>
+                                            <CheckBox x:Name="DocxPageNumCheck" Content="Page numbers"
+                                                      IsChecked="True" Margin="0,0,14,8" Click="OnDocxOptionToggle"/>
+                                            <CheckBox x:Name="PageBreakCheck" Content="Page break between files"
+                                                      IsChecked="True" Margin="0,0,14,8" Click="OnDocxOptionToggle"/>
+                                            <CheckBox x:Name="TxtMarkdownCheck" Content="Read .txt as Markdown"
+                                                      Margin="0,0,0,8" Click="OnDocxOptionToggle"
+                                                      ToolTip="Off by default, so a .txt full of asterisks stays literal"/>
+                                        </WrapPanel>
+
+                                        <Separator Margin="0,8,0,12" Background="{StaticResource Line}" Height="1"/>
+
+                                        <TextBlock Text="TITLE BLOCK" Style="{StaticResource Caps}" Margin="0,0,0,4"/>
+                                        <TextBlock Text="leave blank to skip it entirely"
+                                                   Style="{StaticResource Caps}" Opacity="0.6" Margin="0,0,0,8"/>
+                                        <TextBox x:Name="NameBox" Margin="0,0,0,6" Tag="Your name"
+                                                 ToolTip="Your name. MLA also puts your surname beside the page number."/>
+                                        <TextBox x:Name="InstructorBox" Margin="0,0,0,6" ToolTip="Instructor"/>
+                                        <TextBox x:Name="CourseBox" Margin="0,0,0,6" ToolTip="Course"/>
+                                        <TextBox x:Name="DateBox" Margin="0,0,0,6" ToolTip="Date"/>
+                                        <TextBox x:Name="EssayTitleBox" ToolTip="Title, centred on the first page"/>
+                                    </StackPanel>
 
                                     <Separator Margin="0,14,0,12" Background="{StaticResource Line}" Height="1"/>
 

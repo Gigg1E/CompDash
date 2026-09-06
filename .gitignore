@@ -11,3 +11,6 @@ dist/
 # os
 Thumbs.db
 desktop.ini
+
+# TREAI report output
+.about/
