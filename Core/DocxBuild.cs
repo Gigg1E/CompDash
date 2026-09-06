@@ -185,7 +185,7 @@ namespace CompDash.Core
             bool md = ext.Equals(".md", StringComparison.OrdinalIgnoreCase) ||
                       ext.Equals(".markdown", StringComparison.OrdinalIgnoreCase) ||
                       opt.TreatTxtAsMarkdown;
-            return MarkdownLite.Parse(Docs.ReadText(it.Path), md);
+            return MarkdownLite.Parse(Docs.ReadText(it.Path), md, Path.GetDirectoryName(it.Path));
         }
 
         // ------------------------------------------------------------------
@@ -507,6 +507,12 @@ namespace CompDash.Core
                         WriteImage(main, body, b.ImagePath, opt, temps);
                         break;
 
+                    case BlockKind.Table:
+                        WriteTable(body, b, opt);
+                        // Word wants a paragraph after a table, or two tables run together.
+                        body.AppendChild(new Paragraph());
+                        break;
+
                     default:
                         body.AppendChild(BlockParagraph(main, b, opt));
                         break;
@@ -570,6 +576,109 @@ namespace CompDash.Core
                 }
                 else p.AppendChild(run);
             }
+
+            return p;
+        }
+
+        // ------------------------------------------------------------------
+        //  tables
+        // ------------------------------------------------------------------
+        static void WriteTable(Body body, Block b, DocxOptions opt)
+        {
+            var table = new Table();
+
+            // TableProperties children have a fixed order: width before borders.
+            var props = new TableProperties();
+            props.AppendChild(new TableWidth { Width = "5000", Type = TableWidthUnitValues.Pct });
+            props.AppendChild(new TableBorders(
+                new TopBorder { Val = BorderValues.Single, Size = 4, Color = "999999" },
+                new LeftBorder { Val = BorderValues.Single, Size = 4, Color = "999999" },
+                new BottomBorder { Val = BorderValues.Single, Size = 4, Color = "999999" },
+                new RightBorder { Val = BorderValues.Single, Size = 4, Color = "999999" },
+                new InsideHorizontalBorder { Val = BorderValues.Single, Size = 4, Color = "CCCCCC" },
+                new InsideVerticalBorder { Val = BorderValues.Single, Size = 4, Color = "CCCCCC" }));
+            table.AppendChild(props);
+
+            int columns = 0;
+            foreach (var r in b.Rows) columns = Math.Max(columns, r.Cells.Count);
+            if (columns == 0) return;
+
+            // The schema requires a grid between the properties and the rows.
+            PaperTwips(opt.Paper, out var pageW, out _);
+            int contentW = Math.Max(1000, pageW - (int)(opt.MarginIn * TwipsPerInch * 2));
+            var grid = new TableGrid();
+            for (int c = 0; c < columns; c++)
+                grid.AppendChild(new GridColumn { Width = (contentW / columns).ToString() });
+            table.AppendChild(grid);
+
+            for (int rowIndex = 0; rowIndex < b.Rows.Count; rowIndex++)
+            {
+                var source = b.Rows[rowIndex];
+                bool header = b.HeaderRow && rowIndex == 0;
+                var row = new DocumentFormat.OpenXml.Wordprocessing.TableRow();
+
+                if (header)
+                    row.AppendChild(new TableRowProperties(new TableHeader()));
+
+                for (int c = 0; c < columns; c++)
+                {
+                    var cell = new TableCell();
+                    cell.AppendChild(new TableCellProperties(
+                        new TableCellWidth { Type = TableWidthUnitValues.Auto }));
+
+                    var align = c < b.Aligns.Count ? b.Aligns[c] : CellAlign.Left;
+                    var spans = c < source.Cells.Count ? source.Cells[c] : new List<Span>();
+                    cell.AppendChild(CellParagraph(spans, align, header, opt));
+                    row.AppendChild(cell);
+                }
+
+                table.AppendChild(row);
+            }
+
+            body.AppendChild(table);
+        }
+
+        /// <summary>
+        /// Table cells get single spacing and no first-line indent whatever the document
+        /// body uses — a double-spaced indented cell is unreadable.
+        /// </summary>
+        static Paragraph CellParagraph(List<Span> spans, CellAlign align, bool header, DocxOptions opt)
+        {
+            var pPr = new ParagraphProperties();
+            pPr.AppendChild(new SpacingBetweenLines
+            {
+                Before = "40",
+                After = "40",
+                Line = "240",
+                LineRule = LineSpacingRuleValues.Auto
+            });
+            if (align != CellAlign.Left)
+                pPr.AppendChild(new Justification
+                {
+                    Val = align == CellAlign.Center ? JustificationValues.Center : JustificationValues.Right
+                });
+
+            var p = new Paragraph(pPr);
+
+            foreach (var span in spans)
+            {
+                if (string.IsNullOrEmpty(span.Text)) continue;
+
+                var rPr = new RunProperties();
+                rPr.AppendChild(new RunFonts
+                {
+                    Ascii = span.Code ? "Consolas" : opt.FontName,
+                    HighAnsi = span.Code ? "Consolas" : opt.FontName
+                });
+                if (span.Bold || header) rPr.AppendChild(new Bold());
+                if (span.Italic) rPr.AppendChild(new Italic());
+                rPr.AppendChild(new FontSize { Val = ((int)(opt.FontSize * 2)).ToString() });
+
+                p.AppendChild(new Run(rPr, new Text(span.Text) { Space = SpaceProcessingModeValues.Preserve }));
+            }
+
+            if (!p.Elements<Run>().Any())
+                p.AppendChild(new Run(RunProps(opt), new Text("")));
 
             return p;
         }

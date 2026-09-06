@@ -14,3 +14,7 @@ desktop.ini
 
 # TREAI report output
 .about/
+
+# sample output left in the repo root while testing
+/merged.docx
+/merged.pdf

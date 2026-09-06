@@ -154,7 +154,10 @@ What goes in:
 | | |
 |---|---|
 | `.txt` | Paragraphs split on blank lines, soft-wrapped lines rejoined. Nothing is interpreted, so a file full of asterisks stays literal — unless you tick **Read .txt as Markdown**. |
-| `.md` | Headings, **bold**, *italic*, `code`, bullet and numbered lists, block quotes, fenced code, horizontal rules and links, all mapped to real Word styles. |
+
+Hard-wrapped Markdown behaves the way it reads: a list item or quote that runs onto the
+next line stays one item rather than breaking into a bullet plus a loose paragraph.
+| `.md` | Headings, **bold**, *italic*, `code`, bullet and numbered lists, block quotes, fenced code, horizontal rules, links and tables, all mapped to real Word styles. Pipe tables become real Word tables with the header row bold and column alignment kept. A line that is just `![](shot.png)` pulls the image in, resolved next to the Markdown file. |
 | Images | Embedded and scaled to the text width. WebP and HEIC get re-wrapped as PNG first, since Word cannot embed them. |
 | `.docx` | Read directly and appended, images and all. |
 | `.doc`, `.odt`, `.rtf`, HTML | Through LibreOffice, when it is installed. |
@@ -220,8 +223,8 @@ the new target, and builds a `.docx`.
 - Importing an existing `.docx` copies its content and images, but the target document's
   styles win. A source that leaned on its own custom styles or list numbering may come
   through looking plainer than it started.
-- The Markdown reader covers headings, emphasis, code, lists, quotes, rules and links.
-  Tables, footnotes and images-by-reference are not handled.
+- The Markdown reader covers headings, emphasis, code, lists, quotes, rules, links, tables
+  and `![](image)` references. Footnotes, nested tables and inline HTML are not handled.
 - Merging is done in memory, so a merge of several hundred megabytes of source PDFs will
   use a matching amount of RAM.
 - GIF has no target-size mode — its size comes from frame size, frame rate and palette, so
