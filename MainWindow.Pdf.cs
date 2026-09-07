@@ -43,10 +43,12 @@ namespace CompDash
             PdfOutBox.Text = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "merged.pdf");
 
+            InitPreview();
             CollectPdf();
             CollectDocx();
             ApplyTarget();          // fills in the converter list for whichever target is current
             UpdateDocSummary();
+            DocList.SelectionChanged += (a, b) => QueuePreview();
         }
 
         // ==================================================================
@@ -121,18 +123,21 @@ namespace CompDash
             }
 
             UpdateDocSummary();
+            QueuePreview();
         }
 
         void OnDocxOption(object s, SelectionChangedEventArgs e)
         {
             if (!_pdfReady) return;
             CollectDocx();
+            QueuePreview();
         }
 
         void OnDocxOptionToggle(object s, RoutedEventArgs e)
         {
             if (!_pdfReady) return;
             CollectDocx();
+            QueuePreview();
         }
 
         void CollectDocx()
@@ -279,6 +284,7 @@ namespace CompDash
                 if (!_docs[i].HasProblem) _docs[i].Status = PageLabel(_docs[i]);
             }
             UpdateDocSummary();
+            QueuePreview();
         }
 
         void MoveTo(DocItem it, int newIndex)
@@ -379,6 +385,7 @@ namespace CompDash
             if (it == null) return;
             if (!it.HasProblem) it.Status = PageLabel(it);
             UpdateDocSummary();
+            QueuePreview();
         }
 
         // ------------------------------------------------------------------
@@ -447,6 +454,7 @@ namespace CompDash
             if (!_pdfReady) return;
             CollectPdf();
             UpdateDocSummary();
+            QueuePreview();
         }
 
         void OnPdfOptionToggle(object s, RoutedEventArgs e)
@@ -454,6 +462,7 @@ namespace CompDash
             if (!_pdfReady) return;
             CollectPdf();
             UpdateDocSummary();
+            QueuePreview();
         }
 
         void OnPdfOptionSlider(object s, RoutedPropertyChangedEventArgs<double> e)
@@ -461,6 +470,7 @@ namespace CompDash
             if (!_pdfReady) return;
             CollectPdf();
             Renumber();          // text page counts move with the font size
+            QueuePreview();
         }
 
         void CollectPdf()
@@ -599,6 +609,12 @@ namespace CompDash
                 else report.Add($"Documents tab: Word {Fmt.Size(new FileInfo(docxOut).Length)}  {docxOut}");
 
                 report.Add("Documents tab: summary reads \"" + DocSummary.Text + "\"");
+
+                // The preview, on both targets.
+                SelfTestPreview(problems, report);
+                ChipToPdf.IsChecked = true;
+                OnTargetChip(ChipToPdf, null);
+                SelfTestPreview(problems, report);
             }
             catch (Exception ex)
             {

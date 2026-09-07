@@ -88,8 +88,10 @@ namespace CompDash.Core
                 BuildStyles(main, opt);
                 BuildNumbering(main);
 
-                bool first = true;
-                if (opt.Style != AcademicStyle.Plain) first = !WriteTitleBlock(body, opt);
+                // The title block belongs above the first paragraph of the first file.
+                // It is not a "file", so it must not trigger the between-files page break.
+                if (opt.Style != AcademicStyle.Plain) WriteTitleBlock(body, opt);
+                bool firstFile = true;
 
                 for (int n = 0; n < work.Count; n++)
                 {
@@ -97,7 +99,7 @@ namespace CompDash.Core
                     var it = work[n];
                     progress?.Invoke(n / (double)work.Count, it.Name);
 
-                    if (!first && opt.PageBreakBetweenFiles)
+                    if (!firstFile && opt.PageBreakBetweenFiles)
                         body.AppendChild(new Paragraph(new Run(new Break { Type = BreakValues.Page })));
 
                     int before = body.ChildElements.Count;
@@ -143,7 +145,7 @@ namespace CompDash.Core
                         }
 
                         rep.Log.Add(it.Name + "  ->  " + (body.ChildElements.Count - before) + " blocks");
-                        first = false;
+                        firstFile = false;
                     }
                     catch (OperationCanceledException) { throw; }
                     catch (Exception ex)

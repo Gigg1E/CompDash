@@ -142,6 +142,24 @@ the pages that came from imported PDFs.
 The footer under the list keeps a running "N files · about M pages" so you know what you are
 about to get. Page counts are exact for PDFs and calculated from the real layout for text.
 
+### The preview
+
+The middle column shows the document laid out on the real page, before you build anything.
+Click a row to see that file on its own, or switch to **Whole document** to page through
+the finished thing in order. It redraws as you change the target, the paper, the margins,
+the font, the spacing or a page range, so you can see what a setting costs immediately.
+
+It is built from the same parsed block model the writers consume, so a Markdown table that
+did not parse, an image that failed to load, or a heading that was really a paragraph shows
+up here rather than after a build. Page breaks between files and the title block appear
+exactly where they will land.
+
+Two things it deliberately does not do. Files that are passed through untouched — an
+existing PDF, or a document going through LibreOffice — get a short card saying what will
+happen to them instead of a rendering, because they are not being re-typeset and will look
+exactly as they already do. And line breaking is WPF's rather than Word's, so on a page
+that ends mid-sentence the page count can differ by one from the finished file.
+
 ### Word output
 
 Switch **Merge into** to **Word .docx** and the same ordered list becomes a Word document.
@@ -220,6 +238,7 @@ the new target, and builds a `.docx`.
 - One settings set for the whole Studio queue; there is no per-file override.
 - The Documents tab applies one page setup to the whole document; you cannot mix A4 and
   Letter in a single merge.
+- The preview does not rasterise PDF or Office sources; those rows show a summary card.
 - Importing an existing `.docx` copies its content and images, but the target document's
   styles win. A source that leaned on its own custom styles or list numbering may come
   through looking plainer than it started.

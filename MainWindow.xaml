@@ -1,7 +1,8 @@
 ﻿<Window x:Class="CompDash.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="CompDash" Height="960" Width="1480" MinHeight="720" MinWidth="1180"
+        xmlns:prim="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
+        Title="CompDash" Height="960" Width="1560" MinHeight="720" MinWidth="1240"
         Background="{StaticResource Bg0}" WindowStartupLocation="CenterScreen"
         AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Ideal">
@@ -931,9 +932,11 @@
             <TabItem Header="Documents">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" MinWidth="460"/>
-                        <ColumnDefinition Width="12"/>
-                        <ColumnDefinition Width="396"/>
+                        <ColumnDefinition Width="392"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*" MinWidth="330"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="368"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- ordered file list -->
@@ -1055,8 +1058,71 @@
                         </Grid>
                     </Border>
 
-                    <!-- options -->
+                    <!-- live preview -->
                     <Border Grid.Column="2" CornerRadius="10" Background="{StaticResource Bg1}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
+                                <TextBlock Text="PREVIEW" Style="{StaticResource Caps}"/>
+                                <TextBlock x:Name="PreviewBusy" Text="rendering…" Style="{StaticResource Caps}"
+                                           HorizontalAlignment="Right" Foreground="{StaticResource Accent}"
+                                           Visibility="Collapsed"/>
+                            </Grid>
+
+                            <WrapPanel Grid.Row="1" Margin="0,0,0,10">
+                                <ToggleButton x:Name="ChipScopeFile" Content="This file"
+                                              Style="{StaticResource Chip}" IsChecked="True" Click="OnPreviewScope"/>
+                                <ToggleButton x:Name="ChipScopeAll" Content="Whole document"
+                                              Style="{StaticResource Chip}" Click="OnPreviewScope"/>
+                            </WrapPanel>
+
+                            <Border Grid.Row="2" CornerRadius="8" Background="{StaticResource Bg0}"
+                                    BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14"
+                                    ClipToBounds="True">
+                                <Grid>
+                                    <Viewbox x:Name="PreviewBox" Stretch="Uniform"
+                                             StretchDirection="DownOnly" VerticalAlignment="Center">
+                                        <Border Background="White" SnapsToDevicePixels="True">
+                                            <Border.Effect>
+                                                <DropShadowEffect BlurRadius="18" ShadowDepth="0"
+                                                                  Opacity="0.55" Color="Black"/>
+                                            </Border.Effect>
+                                            <prim:DocumentPageView x:Name="PreviewPage" PageNumber="0"/>
+                                        </Border>
+                                    </Viewbox>
+
+                                    <TextBlock x:Name="PreviewEmpty" Text="select a file to preview it"
+                                               Style="{StaticResource Label}" HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" TextWrapping="Wrap"
+                                               TextAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <Grid Grid.Row="3" Margin="0,10,0,0">
+                                <TextBlock x:Name="PreviewCaption" Style="{StaticResource Caps}"
+                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                           Margin="0,0,110,0"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button x:Name="BtnPrevPage" Content="‹" Style="{StaticResource TinyBtn}"
+                                            Click="OnPreviewPrev"/>
+                                    <TextBlock x:Name="PreviewPageNo" Text="—" Style="{StaticResource Value}"
+                                               MinWidth="54" TextAlignment="Center" VerticalAlignment="Center"/>
+                                    <Button x:Name="BtnNextPage" Content="›" Style="{StaticResource TinyBtn}"
+                                            Click="OnPreviewNext"/>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- options -->
+                    <Border Grid.Column="4" CornerRadius="10" Background="{StaticResource Bg1}"
                             BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14">
                         <Grid>
                             <Grid.RowDefinitions>
